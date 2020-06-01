@@ -6,7 +6,7 @@ boringdroid is an `AOSP` extending project based on `AOSP` 9.0, and it provides 
 
 ## Preview
 
-![boringdroid multiwindow screenshot](images/screenshot-multi-window.png)
+![screenshot with multi-window](/images/screenshot-multi-window.png)
 
 The boringdroid adds minimum button for window, and provides the smooth resizing experience. The boringdroid also provides exhanced taskbar to show running task list and installed app list. The next step the boringdroid will do is to provide system tray in taskbar.
 
@@ -30,7 +30,7 @@ The boringdroid now runs in emulator, what is convenient to debug and test modif
 
 ## BoringdroidSystemUI
 
-The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custom views to system navigation bar. And it provides a gradle script to develop the `BoringdroidSystemUI` in latest `AndroidStudio`. For more detail, please see the document in the project [BoringdroidSystemUI](https://github.com/boringdroid/vendor_boringdroid/tree/boringdroid-9.0.0/packages/apps/BoringdroidSystemUI).
+The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custom views to system navigation bar. And it also uses `sysui_shared.jar` exposed by `SystemUI` to receive task changed events for taskbar. For better developing experience, it provides a gradle script to develop the `BoringdroidSystemUI` in latest `AndroidStudio`. For more detail, please see the document in the project [BoringdroidSystemUI](https://github.com/boringdroid/vendor_boringdroid/tree/boringdroid-9.0.0/packages/apps/BoringdroidSystemUI).
 
 ## Porting
 
