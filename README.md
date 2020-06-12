@@ -32,9 +32,24 @@ The boringdroid now runs in emulator, what is convenient to debug and test modif
 
 The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custom views to system navigation bar. And it also uses `sysui_shared.jar` exposed by `SystemUI` to receive task changed events for taskbar. For better developing experience, it provides a gradle script to develop the `BoringdroidSystemUI` in latest `AndroidStudio`. For more detail, please see the document in the project [BoringdroidSystemUI](https://github.com/boringdroid/vendor_boringdroid/tree/boringdroid-9.0.0/packages/apps/BoringdroidSystemUI).
 
-## Porting
+## android-x86 porting
 
-There is a plan to port boringdorid to android-x86.
+Also, there is an version ported to [android-x86](https://www.android-x86.org/). We only port some important bug fixes and feature to android-x86 version, and keep the origin android-x86 configuration, such as [Taskbar](https://github.com/farmerbb/Taskbar).
+
+We can use following script to download and build android-x86 porting boringdroid:
+
+```
+mkdir boringdroid-x86
+cd boringdroid-x86
+repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-x86-9.0.0
+repo sync -c -d --no-tags --no-clone-bundle
+
+source build/envsetup.sh
+lunch android_x86_64-userdebug
+m iso_img
+```
+
+Then we can follow [android-x86 installation howto](https://www.android-x86.org/installhowto.html) to install built iso files to real machine or vbox.
 
 ## License
 
