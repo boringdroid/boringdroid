@@ -38,7 +38,7 @@ Also, there is an version ported to [android-x86](https://www.android-x86.org/).
 
 We can use following script to download and build android-x86 porting boringdroid:
 
-```
+```shell
 mkdir boringdroid-x86
 cd boringdroid-x86
 repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-x86-9.0.0
