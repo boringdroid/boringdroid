@@ -51,6 +51,10 @@ m iso_img
 
 Then we can follow [android-x86 installation howto](https://www.android-x86.org/installhowto.html) to install built iso files to real machine or vbox.
 
+### Update:
+
+The [android-x86](https://www.android-x86.org/) and [BlissOS](https://www.blissos.org/) have accepting those patches to their code repositories.
+
 ## License
 
 The modified `AOSP` project uses the origin license. And the `boringdroid` created projects will uses its custom license on its project.
