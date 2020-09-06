@@ -55,6 +55,10 @@ Then we can follow [android-x86 installation howto](https://www.android-x86.org/
 
 The [android-x86](https://www.android-x86.org/) and [BlissOS](https://www.blissos.org/) have accepting those patches to their code repositories.
 
+### Special thanks
+
+Thanks Roger Truttmann in team bliss to help design logo.
+
 ## License
 
 The modified `AOSP` project uses the origin license. And the `boringdroid` created projects will uses its custom license on its project.
