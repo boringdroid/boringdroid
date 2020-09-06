@@ -1,12 +1,14 @@
 # boringdroid
 
+![boringdroid logo](./images/logo.png)
+
 ## Introduction
 
 boringdroid is an `AOSP` extending project based on `AOSP` 9.0, and it provides the patch set to use multi-window in `AOSP` default. The patch set is boring, and most of problems the patch set resolves look like disappearing on `master` branch, so the project is boring, that the reason I calls it boringdroid.
 
 ## Preview
 
-![screenshot with multi-window](/images/screenshot-multi-window.png)
+![screenshot with multi-window](./images/screenshot-multi-window.png)
 
 The boringdroid adds minimum button for window, and provides the smooth resizing experience. The boringdroid also provides exhanced taskbar to show running task list and installed app list. The next step the boringdroid will do is to provide system tray in taskbar.
 
