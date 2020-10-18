@@ -17,7 +17,7 @@ The boringdroid adds minimum button for window, and provides the smooth resizing
 ```shell
 mkdir boringdroid
 cd boringdroid
-repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-9.0.0
+repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-10.0.0
 repo sync -c -d --no-tags
 ```
 ## Build
