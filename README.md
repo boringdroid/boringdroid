@@ -4,7 +4,7 @@
 
 ## Introduction
 
-boringdroid is an `AOSP` extending project based on `AOSP` 9.0, and it provides the patch set to use multi-window in `AOSP` default. The patch set is boring, and most of problems the patch set resolves look like disappearing on `master` branch, so the project is boring, that the reason I calls it boringdroid.
+boringdroid is an `AOSP` extending project based on `AOSP`(9.0 - 11.0), and it provides the patch set to use multi-window in `AOSP` default. The patch set is boring, and most of problems the patch set resolves look like disappearing on `master` branch, so the project is boring, that the reason I calls it boringdroid.
 
 ## Preview
 
