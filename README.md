@@ -4,13 +4,13 @@
 
 ## Introduction
 
-boringdroid is an `AOSP` extending project based on `AOSP`(9.0 - 11.0), and it provides the patch set to use multi-window in `AOSP` default. The patch set is boring, and most of problems the patch set resolves look like disappearing on `master` branch, so the project is boring, that the reason I calls it boringdroid.
+Boringdroid is an `AOSP` extending project based on `AOSP`(9.0 - 11.0), and it provides a minimum patchset to use multi-window in `AOSP` by default. The patch set is boring, and most of problems the patchset resolves look like they are disappearing on `master` branch, so the project is boring, that the reason I calls it Boringdroid.
 
 ## Preview
 
 ![screenshot with multi-window](./images/screenshot-multi-window.png)
 
-The boringdroid adds minimum button for window, and provides the smooth resizing experience. The boringdroid also provides exhanced taskbar to show running task list and installed app list. The next step the boringdroid will do is to provide system tray in taskbar.
+The boringdroid adds a minimize button for each window, and provides a smooth resizing experience. Boringdroid also provides an enhanced taskbar to show running task list and installed app list. The next steps for Boringdroid will be to provide system tray functionalities in the taskbar.
 
 ## Download
 
@@ -28,7 +28,7 @@ lunch boringdroid_x86_64-userdebug
 m
 ```
 
-The boringdroid now runs in emulator, what is convenient to debug and test modification. So the product `boringdroid_x86_64` bases on the `goldfish`. After building, we can execute `emulator` to start emulator.
+The boringdroid now runs in emulator, which is convenient to debug and test modification. So the product `boringdroid_x86_64` bases on the `goldfish`. After building, we can execute `emulator` to start emulator.
 
 ## BoringdroidSystemUI
 
