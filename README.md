@@ -36,32 +36,17 @@ The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custo
 
 If you have interested on `BoringdroidSystemUI`, and don't want to download full source code, maybe you can try [emulator-images-release](https://github.com/boringdroid/emulator-images-release), and use emulator from Android Studio to run it. It only supports boringdroid 10 now, and we will support boringdroid 9 if there are users have interested on it. So if you it to develop `BoringdroidSystemUI`, please change branch to [`boringdroid-10.0.0`](https://github.com/boringdroid/vendor_packages_apps_BoringdroidSystemUI/tree/boringdroid-10.0.0).
 
-## android-x86 porting
+## Android-x86 porting
 
-Also, there is an version ported to [android-x86](https://www.android-x86.org/). We only port some important bug fixes and feature to android-x86 version, and keep the origin android-x86 configuration, such as [Taskbar](https://github.com/farmerbb/Taskbar).
+The [Android-x86](https://www.android-x86.org/) has accepting ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
 
-We can use following script to download and build android-x86 porting boringdroid:
+## Bliss Family Projects
 
-```shell
-mkdir boringdroid-x86
-cd boringdroid-x86
-repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-x86-9.0.0
-repo sync -c -d --no-tags --no-clone-bundle
+The boringdroid is the part of [Bliss Family Projects](https://blissos.org/).
 
-source build/envsetup.sh
-lunch android_x86_64-userdebug
-m iso_img
-```
+## Special thanks
 
-Then we can follow [android-x86 installation howto](https://www.android-x86.org/installhowto.html) to install built iso files to real machine or vbox.
-
-### Update:
-
-The [android-x86](https://www.android-x86.org/) and [BlissOS](https://www.blissos.org/) have accepting those patches to their code repositories.
-
-### Special thanks
-
-Thanks Roger Truttmann in team bliss to help design logo.
+Thanks Roger Truttmann of [Team Bliss](https://blissos.org/) to help design logo.
 
 ## License
 
