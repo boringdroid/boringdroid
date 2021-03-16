@@ -30,11 +30,13 @@ m
 
 The boringdroid now runs in emulator, which is convenient to debug and test modification. So the product `boringdroid_x86_64` bases on the `goldfish`. After building, we can execute `emulator` to start emulator.
 
-## BoringdroidSystemUI
+## Contributing
 
-The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custom views to system navigation bar. And it also uses `sysui_shared.jar` exposed by `SystemUI` to receive task changed events for taskbar. For better developing experience, it provides a gradle script to develop the `BoringdroidSystemUI` in latest `AndroidStudio`. For more detail, please see the document in the project [BoringdroidSystemUI](https://github.com/boringdroid/vendor_packages_apps_BoringdroidSystemUI).
+See [CONTRIBUTING](CONTRIBUTING.md)
 
-If you have interested on `BoringdroidSystemUI`, and don't want to download full source code, maybe you can try [emulator-images-release](https://github.com/boringdroid/emulator-images-release), and use emulator from Android Studio to run it. It only supports boringdroid 10 now, and we will support boringdroid 9 if there are users have interested on it. So if you it to develop `BoringdroidSystemUI`, please change branch to [`boringdroid-10.0.0`](https://github.com/boringdroid/vendor_packages_apps_BoringdroidSystemUI/tree/boringdroid-10.0.0).
+## Architecture
+
+See [ARCHITECTURE](ARCHITECTURE.md)
 
 ## Android-x86 porting
 
