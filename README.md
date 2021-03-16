@@ -36,6 +36,10 @@ The `BoringdroidSystemUI` uses the `SystemUI`'s plugin hook library to add custo
 
 If you have interested on `BoringdroidSystemUI`, and don't want to download full source code, maybe you can try [emulator-images-release](https://github.com/boringdroid/emulator-images-release), and use emulator from Android Studio to run it. It only supports boringdroid 10 now, and we will support boringdroid 9 if there are users have interested on it. So if you it to develop `BoringdroidSystemUI`, please change branch to [`boringdroid-10.0.0`](https://github.com/boringdroid/vendor_packages_apps_BoringdroidSystemUI/tree/boringdroid-10.0.0).
 
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md)
+
 ## Android-x86 porting
 
 The [Android-x86](https://www.android-x86.org/) has accepting ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
