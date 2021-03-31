@@ -40,7 +40,7 @@ See [ARCHITECTURE](ARCHITECTURE.md)
 
 ## Android-x86 porting
 
-The [Android-x86](https://www.android-x86.org/) has accepting ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
+The [Android-x86](https://www.android-x86.org/) has accepted ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
 
 ## Bliss Family Projects
 
