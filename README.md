@@ -42,9 +42,9 @@ See [ARCHITECTURE](ARCHITECTURE.md)
 
 The [Android-x86](https://www.android-x86.org/) has accepted ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
 
-## Bliss Family Projects
+## A BlissLabs Project
 
-The boringdroid is the part of [Bliss Family Projects](https://blissos.org/).
+The boringdroid is a [BlissLabs](https://blisslabs.org/) Project.
 
 ## Special thanks
 
