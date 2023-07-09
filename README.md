@@ -48,7 +48,7 @@ The boringdroid is a [BlissLabs](https://blisslabs.org/) Project.
 
 ## Special thanks
 
-Thanks Roger Truttmann of [Team Bliss](https://blissos.org/) to help design logo.
+Thanks Roger Truttmann of [BlissLabs](https://blissos.org/) to help design logo.
 
 ## License
 
