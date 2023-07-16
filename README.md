@@ -30,6 +30,8 @@ m
 
 The boringdroid now runs in emulator, which is convenient to debug and test modification. So the product `boringdroid_x86_64` bases on the `goldfish`. After building, we can execute `emulator` to start emulator.
 
+From boringdroid-13.0.0, if you encounter boot image verified error, you can try use `m -j8` or other proper thread number to reduce the thread number for building to fix it.
+
 ## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md)
