@@ -17,7 +17,7 @@ The boringdroid adds a minimize button for each window, and provides a smooth re
 ```shell
 mkdir -p boringdroid/11
 cd boringdroid/11
-repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-11.0.0
+repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-14.0.0
 repo sync -c -d --no-tags
 ```
 ## Build
