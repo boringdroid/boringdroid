@@ -47,6 +47,26 @@ LUNCH_TARGET=${BORINGDROID_LUNCH_TARGET:-boringdroid_x86_64-userdebug}
 mkdir -p "$LOG_DIR"
 
 # ──────────────────────────────────────────────
+# Clean up emulator (and its friends) on script exit — success, failure, or
+# Ctrl-C. The dispatch subagent boots qemu via `emulator -no-snapshot …` and
+# doesn't own its lifecycle; without this trap, a finished loop leaves the
+# qemu process alive and the AVD's multiinstance.lock held, breaking any
+# future `emulator` launch with:
+#   Running multiple emulators with the same AVD is an experimental feature.
+# Runs in EXIT handler so it fires once per script, regardless of reason.
+# ──────────────────────────────────────────────
+cleanup_emulator() {
+    local exit_code=$?
+    if pgrep -f qemu-system-x86_64 >/dev/null 2>&1; then
+        echo "[$(date '+%H:%M:%S')] Shutting down emulator (script exit)..."
+        pkill -9 -f qemu-system-x86_64 2>/dev/null || true
+        pkill -9 -f netsimd 2>/dev/null || true
+    fi
+    exit "$exit_code"
+}
+trap cleanup_emulator EXIT INT TERM
+
+# ──────────────────────────────────────────────
 # Find the highest-numbered handoff-N.md
 # ──────────────────────────────────────────────
 find_latest_handoff() {
