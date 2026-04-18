@@ -334,6 +334,16 @@ verify_completion() {
 
     echo "[$(date '+%H:%M:%S')] ✓ Emulator booted, plugin loaded, NavigationBar0 present."
     echo "[$(date '+%H:%M:%S')]   Screenshot: ${screenshot}"
+
+    # Run the UiAutomator instrumentation suite against the live plugin. A smoke
+    # boot is not proof the user-facing features (app drawer, taskbar icons,
+    # clock, rotation) actually work — this catches the rendered-but-broken case.
+    echo "[$(date '+%H:%M:%S')] Running BoringdroidSystemUI instrumentation tests..."
+    if ! bash "${SCRIPT_DIR}/run-boringdroid-tests.sh"; then
+        echo "[$(date '+%H:%M:%S')] ✗ Instrumentation tests failed — see log dir ${LOG_DIR}"
+        return 1
+    fi
+
     return 0
 }
 
