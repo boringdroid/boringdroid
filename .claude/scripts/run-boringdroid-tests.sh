@@ -8,7 +8,9 @@
 #   1  — build / install / setup failed
 #   2  — one or more tests failed (crash captured)
 
-set -uo pipefail
+set -o pipefail
+# Don't use -u: AOSP's build/envsetup.sh references unbound variables as part
+# of its normal initialization and would crash under `set -u`.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="$(cd "${SCRIPT_DIR}" && while [[ "$PWD" != "/" ]]; do
@@ -43,34 +45,62 @@ if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]
 fi
 
 # ──────────────────────────────────────────────
-# Build the androidTest APK
+# Build the main plugin + test APKs via Soong. Boringdroid apps ship through
+# Android.bp, not Gradle — using Gradle here would require Maven-coord test
+# libs that aren't in the AOSP tree. `m BoringdroidSystemUITests` builds the
+# instrumentation APK with AOSP-hosted `androidx.test.*` modules.
 # ──────────────────────────────────────────────
-echo "[$(ts)] Building androidTest APK in ${APP_DIR}..."
-if ! (cd "$APP_DIR" && ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest \
-        > "${LOG_DIR}/gradle-test-${TIMESTAMP}.log" 2>&1); then
-    echo "[$(ts)] ✗ Gradle build failed — see ${LOG_DIR}/gradle-test-${TIMESTAMP}.log"
-    tail -40 "${LOG_DIR}/gradle-test-${TIMESTAMP}.log"
+echo "[$(ts)] Building BoringdroidSystemUI + BoringdroidSystemUITests via Soong..."
+if ! (cd "$WORK_DIR" && source build/envsetup.sh >/dev/null 2>&1 \
+        && lunch "${BORINGDROID_LUNCH_TARGET:-boringdroid_x86_64-userdebug}" >/dev/null 2>&1 \
+        && m BoringdroidSystemUI BoringdroidSystemUITests \
+            > "${LOG_DIR}/soong-test-${TIMESTAMP}.log" 2>&1); then
+    echo "[$(ts)] ✗ Soong build failed — see ${LOG_DIR}/soong-test-${TIMESTAMP}.log"
+    tail -40 "${LOG_DIR}/soong-test-${TIMESTAMP}.log"
     exit 1
 fi
 
-APP_APK="${APP_DIR}/app/build/outputs/apk/debug/app-debug.apk"
-TEST_APK="${APP_DIR}/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+PRODUCT_OUT="${WORK_DIR}/out/target/product/boringdroid_x86_64"
+APP_APK="${PRODUCT_OUT}/system_ext/priv-app/BoringdroidSystemUI/BoringdroidSystemUI.apk"
+[ -s "$APP_APK" ] || APP_APK="${PRODUCT_OUT}/system/priv-app/BoringdroidSystemUI/BoringdroidSystemUI.apk"
+[ -s "$APP_APK" ] || APP_APK="${PRODUCT_OUT}/system/app/BoringdroidSystemUI/BoringdroidSystemUI.apk"
+TEST_APK=$(find "${PRODUCT_OUT}" -name "BoringdroidSystemUITests.apk" 2>/dev/null | head -1)
 if [ ! -s "$APP_APK" ] || [ ! -s "$TEST_APK" ]; then
-    echo "[$(ts)] ✗ Expected APK outputs missing (${APP_APK}, ${TEST_APK})"
+    echo "[$(ts)] ✗ Expected APK outputs missing (app=${APP_APK}, test=${TEST_APK})"
     exit 1
 fi
 
 # ──────────────────────────────────────────────
-# Install APKs (the app APK so the test APK's signature matches the target)
+# Install APKs. Even though the plugin ships on the OS image, a prior cycle
+# may have overlaid /data/app with a stale build via `adb install`. Re-pushing
+# the freshly-built plugin APK guarantees we test current source.
 # ──────────────────────────────────────────────
-echo "[$(ts)] Installing app + test APKs..."
-adb install -r -t "$APP_APK" > /dev/null || {
-    echo "[$(ts)] ✗ Failed to install app APK"; exit 1; }
+echo "[$(ts)] Installing plugin APK (${APP_APK##*/})..."
+# -d allows downgrading past versionCode; a previous cycle may have used Gradle's
+# debug versionCode (130) while Soong's is the manifest's value (typically 34).
+adb install -r -t -d "$APP_APK" > /dev/null 2>&1 || {
+    # If install still fails, uninstall any /data overlay and retry.
+    adb shell pm uninstall --user 0 "$PKG" > /dev/null 2>&1 || true
+    adb install -r -t -d "$APP_APK" > /dev/null 2>&1 || {
+        echo "[$(ts)] ⚠ Failed to install plugin APK — relying on image-baked copy"; }
+}
+echo "[$(ts)] Installing test APK (${TEST_APK##*/})..."
 adb install -r -t "$TEST_APK" > /dev/null || {
     echo "[$(ts)] ✗ Failed to install test APK"; exit 1; }
 
-# Clear the plugin's state so each run starts fresh.
+# Re-enable in case a prior bad run left SystemUIOverlay in disabledComponents,
+# clear the plugin's data, and force-restart SystemUI so it loads the freshly-
+# installed plugin APK instead of the already-running old class bytes.
+adb shell pm enable "${PKG}/.SystemUIOverlay" > /dev/null 2>&1 || true
 adb shell pm clear "$PKG" > /dev/null 2>&1 || true
+echo "[$(ts)] Restarting SystemUI to pick up new plugin..."
+adb shell killall com.android.systemui > /dev/null 2>&1 || true
+# Wait for SystemUI to respawn and the plugin to attach.
+sleep 5
+n=0
+while ! adb shell dumpsys window windows 2>/dev/null | grep -q "NavigationBar0" && (( n < 20 )); do
+    sleep 1; n=$((n+1))
+done
 
 # Clear logcat so a failure capture below only shows test-run lines.
 adb logcat -c > /dev/null 2>&1 || true
