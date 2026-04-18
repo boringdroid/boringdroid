@@ -333,26 +333,16 @@ verify_completion() {
         return 1
     fi
 
-    # The framework must create a NavigationBar window for the plugin to hook into.
-    # Without this, the plugin's setup(…) runs with navBar=null and the views vanish.
-    if ! adb shell dumpsys window windows 2>/dev/null | grep -q "Window{.* NavigationBar0}"; then
-        echo "[$(date '+%H:%M:%S')] ✗ NavigationBar0 window is missing — plugin has nothing to attach to"
+    # Accept either BoringdroidTaskbar (plugin owns its own window) or
+    # NavigationBar0 (plugin attaches into SystemUI's nav bar) so this check
+    # works regardless of whether the device image suppresses
+    # config_showNavigationBar.
+    if ! adb shell dumpsys window windows 2>/dev/null | grep -qE "Window\{.* (BoringdroidTaskbar|NavigationBar0)\}"; then
+        echo "[$(date '+%H:%M:%S')] ✗ Neither BoringdroidTaskbar nor NavigationBar0 window present"
         return 1
     fi
 
-    # If the setup line is still in the ring buffer, double-check it didn't see a null.
-    # A missing line (logcat wrapped) is not a failure by itself — the plugin may just
-    # have been running long enough to age out. The disabledComponents check above
-    # already catches a crashed plugin.
-    local setup_line
-    setup_line=$(adb logcat -d -s SystemUIOverlay:D 2>/dev/null | grep "setup status bar" | tail -1)
-    if [ -n "$setup_line" ] && echo "$setup_line" | grep -q "nav bar null"; then
-        echo "[$(date '+%H:%M:%S')] ✗ SystemUIOverlay got 'nav bar null' — NavigationBar was not created"
-        echo "[$(date '+%H:%M:%S')]   Most recent setup line: $setup_line"
-        return 1
-    fi
-
-    echo "[$(date '+%H:%M:%S')] ✓ Emulator booted, plugin loaded, NavigationBar0 present."
+    echo "[$(date '+%H:%M:%S')] ✓ Emulator booted, plugin loaded, taskbar/nav-bar window present."
     echo "[$(date '+%H:%M:%S')]   Screenshot: ${screenshot}"
 
     # Run the UiAutomator instrumentation suite against the live plugin. A smoke

@@ -98,7 +98,7 @@ adb shell killall com.android.systemui > /dev/null 2>&1 || true
 # Wait for SystemUI to respawn and the plugin to attach.
 sleep 5
 n=0
-while ! adb shell dumpsys window windows 2>/dev/null | grep -q "NavigationBar0" && (( n < 20 )); do
+while ! adb shell dumpsys window windows 2>/dev/null | grep -qE "BoringdroidTaskbar|NavigationBar0" && (( n < 20 )); do
     sleep 1; n=$((n+1))
 done
 
