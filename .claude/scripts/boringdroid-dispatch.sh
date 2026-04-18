@@ -264,7 +264,18 @@ run_subagent() {
 }
 
 # ──────────────────────────────────────────────
-# Verify that the boringdroid emulator is actually running
+# Verify that the boringdroid emulator is actually running AND that
+# BoringdroidSystemUI is live (loaded, not disabled, bound to the nav bar).
+#
+# Handoff #1 "completed" while the plugin was silently disabled by
+# PluginActionManager after a ClassCastException — a log-free failure that
+# the bare boot_completed check happily waved through. This verifier now:
+#   1. Checks the device is connected and sys.boot_completed=1
+#   2. Confirms the BoringdroidSystemUI package exists and its
+#      SystemUIOverlay component is NOT in disabledComponents
+#   3. Confirms the most recent SystemUIOverlay "setup … nav bar …" log
+#      line reports a non-null nav bar (plugin actually attached)
+#   4. Captures a screenshot for human review
 # ──────────────────────────────────────────────
 verify_completion() {
     echo "[$(date '+%H:%M:%S')] Verifying boringdroid_x86_64 emulator is running..."
@@ -279,7 +290,50 @@ verify_completion() {
         return 1
     fi
 
-    echo "[$(date '+%H:%M:%S')] ✓ Emulator booted. Acceptance criteria are task-specific — trust the handoff's self-report."
+    local screenshot="${LOG_DIR}/verify-screen-$(date +%Y%m%d-%H%M%S).png"
+    if adb exec-out screencap -p > "$screenshot" 2>/dev/null && [ -s "$screenshot" ]; then
+        echo "[$(date '+%H:%M:%S')] ✓ Screenshot captured at ${screenshot}"
+    else
+        echo "[$(date '+%H:%M:%S')] ⚠ Screenshot capture failed (continuing)"
+    fi
+
+    if ! adb shell pm list packages 2>/dev/null | grep -q "^package:com.boringdroid.systemui$"; then
+        echo "[$(date '+%H:%M:%S')] ✗ BoringdroidSystemUI package is not installed"
+        return 1
+    fi
+
+    local disabled
+    disabled=$(adb shell dumpsys package com.boringdroid.systemui 2>/dev/null \
+        | awk '/disabledComponents:/{flag=1;next}/^[[:space:]]*$/{flag=0}flag' \
+        | tr -d '\r')
+    if echo "$disabled" | grep -q "com.boringdroid.systemui.SystemUIOverlay"; then
+        echo "[$(date '+%H:%M:%S')] ✗ BoringdroidSystemUI plugin is in disabledComponents (PluginActionManager disabled it after a crash)"
+        echo "[$(date '+%H:%M:%S')]   Check adb logcat for the exception, fix it, then run:"
+        echo "[$(date '+%H:%M:%S')]     adb shell \"su 0 pm enable com.boringdroid.systemui/.SystemUIOverlay\""
+        return 1
+    fi
+
+    # The framework must create a NavigationBar window for the plugin to hook into.
+    # Without this, the plugin's setup(…) runs with navBar=null and the views vanish.
+    if ! adb shell dumpsys window windows 2>/dev/null | grep -q "Window{.* NavigationBar0}"; then
+        echo "[$(date '+%H:%M:%S')] ✗ NavigationBar0 window is missing — plugin has nothing to attach to"
+        return 1
+    fi
+
+    # If the setup line is still in the ring buffer, double-check it didn't see a null.
+    # A missing line (logcat wrapped) is not a failure by itself — the plugin may just
+    # have been running long enough to age out. The disabledComponents check above
+    # already catches a crashed plugin.
+    local setup_line
+    setup_line=$(adb logcat -d -s SystemUIOverlay:D 2>/dev/null | grep "setup status bar" | tail -1)
+    if [ -n "$setup_line" ] && echo "$setup_line" | grep -q "nav bar null"; then
+        echo "[$(date '+%H:%M:%S')] ✗ SystemUIOverlay got 'nav bar null' — NavigationBar was not created"
+        echo "[$(date '+%H:%M:%S')]   Most recent setup line: $setup_line"
+        return 1
+    fi
+
+    echo "[$(date '+%H:%M:%S')] ✓ Emulator booted, plugin loaded, NavigationBar0 present."
+    echo "[$(date '+%H:%M:%S')]   Screenshot: ${screenshot}"
     return 0
 }
 
