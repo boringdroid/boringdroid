@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BoringdroidSystemUI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Roboto+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="design-system/tokens.css">
+<link rel="stylesheet" href="design-system/components.css">
+<style>
+  html, body { height: 100%; overflow: hidden; background: #000; }
+  body {
+    font-variation-settings: "opsz" 14, "wdth" 100, "GRAD" 0, "ROND" 100, "wght" 500;
+  }
+
+  /* ---------------- Desktop stage ---------------- */
+  .bd-desktop {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    background:
+      radial-gradient(120% 80% at 15% 12%, #8B6BE8 0%, transparent 45%),
+      radial-gradient(100% 70% at 85% 20%, #C79CE6 0%, transparent 50%),
+      radial-gradient(90% 80% at 70% 90%, #4A3378 0%, transparent 55%),
+      linear-gradient(135deg, #2A1E4A 0%, #4B2F7A 50%, #3A2264 100%);
+  }
+
+  /* Soft orb wallpaper decoration */
+  .bd-wallpaper-decor {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.55;
+    mix-blend-mode: screen;
+  }
+  .orb.a { width: 520px; height: 520px; top: -120px; left: -80px; background: #B68CF5; }
+  .orb.b { width: 420px; height: 420px; top: 15%; right: -120px; background: #EFBCE4; opacity: .4; }
+  .orb.c { width: 360px; height: 360px; bottom: 12%; left: 22%; background: #7B5CE1; opacity: .35; }
+
+  /* Desktop icons grid */
+  .bd-desktop-icons {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(5, 100px);
+    gap: 12px;
+    column-gap: 24px;
+  }
+  .bd-di {
+    width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: 12px;
+    transition: background .18s var(--md-sys-motion-easing-standard);
+  }
+  .bd-di:hover { background: rgba(255,255,255,.12); }
+  .bd-di .icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  }
+  .bd-di .icon .material-symbols-rounded { font-size: 28px; font-variation-settings: 'FILL' 1, 'wght' 500; }
+  .bd-di .label {
+    font: 500 12px/14px var(--md-sys-typescale-font);
+    color: white;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    max-width: 92px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------------- Windows (floating apps) ---------------- */
+  .bd-window {
+    position: absolute;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 88%, transparent);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-radius: 20px;
+    box-shadow: 0 24px 48px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+    border: 1px solid color-mix(in srgb, white 10%, transparent);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: var(--md-sys-color-on-surface);
+  }
+  .bd-window .win-chrome {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px 0 16px;
+    gap: 8px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 60%, transparent);
+  }
+  .bd-window .win-title {
+    font: 600 13px/18px var(--md-sys-typescale-font);
+    flex: 1;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--md-sys-color-on-surface);
+  }
+  .bd-window .win-title .dot {
+    width: 20px; height: 20px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .bd-window .win-title .dot .material-symbols-rounded { font-size: 14px; font-variation-settings: 'FILL' 1; }
+  .bd-window .win-ctrl {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: transparent; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .bd-window .win-ctrl:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .bd-window .win-ctrl.close:hover { background: var(--md-sys-color-error); color: var(--md-sys-color-on-error); }
+  .bd-window .win-ctrl .material-symbols-rounded { font-size: 18px; }
+  .bd-window .win-body {
+    flex: 1;
+    overflow: hidden;
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  /* Files app */
+  .files-app { display: grid; grid-template-columns: 220px 1fr; height: 100%; }
+  .files-side {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 70%, transparent);
+    padding: 12px 8px;
+    border-right: 1px solid var(--md-sys-color-outline-variant);
+    overflow-y: auto;
+  }
+  .files-side .group { font: 600 11px/16px var(--md-sys-typescale-font); letter-spacing: .6px; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); padding: 14px 12px 6px; }
+  .files-side .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-radius: 100px;
+    font: 500 14px/20px var(--md-sys-typescale-font);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+  }
+  .files-side .item:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+  .files-side .item.active { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .files-side .item .material-symbols-rounded { font-size: 20px; }
+  .files-main { overflow: auto; padding: 20px 24px; }
+  .files-main .path { display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font: 500 13px/18px var(--md-sys-typescale-font); margin-bottom: 18px; }
+  .files-main .path .sep { opacity: .4; }
+  .files-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 14px;
+  }
+  .file-tile {
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: 18px;
+    padding: 14px 12px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer;
+    transition: transform .15s var(--md-sys-motion-easing-spring-fast), background .18s;
+  }
+  .file-tile:hover { transform: translateY(-2px); background: var(--md-sys-color-surface-container-highest); }
+  .file-tile .ft-ic {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .file-tile .ft-ic .material-symbols-rounded { font-size: 28px; font-variation-settings: 'FILL' 1; }
+  .file-tile .ft-name { font: 500 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-tile .ft-meta { font: 400 10px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+
+  /* Terminal look */
+  .term-app {
+    background: #161318; color: #E6E0E9; height: 100%;
+    font: 400 13px/20px var(--md-sys-typescale-font-mono);
+    padding: 16px; overflow: auto;
+  }
+  .term-app .pr { color: #D0BCFF; }
+  .term-app .ok { color: #88E0A7; }
+  .term-app .dim { color: #8A8494; }
+
+  /* ---------------- Taskbar ---------------- */
+  .bd-taskbar {
+    position: absolute;
+    left: 12px; right: 12px; bottom: 12px;
+    height: 60px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 72%, transparent);
+    backdrop-filter: blur(28px) saturate(1.4);
+    -webkit-backdrop-filter: blur(28px) saturate(1.4);
+    border: 1px solid color-mix(in srgb, white 8%, transparent);
+    box-shadow: 0 10px 28px rgba(0,0,0,.32);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+    color: var(--md-sys-color-on-surface);
+    z-index: 40;
+  }
+
+  /* Start cluster */
+  .tb-start-cluster { display: flex; align-items: center; gap: 6px; }
+  .tb-start {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, var(--md-sys-color-tertiary) 100%);
+    color: var(--md-sys-color-on-primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer;
+    transition: transform .2s var(--md-sys-motion-easing-spring-fast), border-radius .2s;
+    box-shadow: 0 3px 10px rgba(0,0,0,.25);
+  }
+  .tb-start:hover { transform: translateY(-1px); }
+  .tb-start:active { border-radius: 22px; transform: scale(.94); }
+  .tb-start .material-symbols-rounded { font-size: 24px; font-variation-settings: 'FILL' 1, 'wght' 600; }
+  .tb-search {
+    height: 48px;
+    min-width: 220px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
+    border: 1px solid transparent;
+    padding: 0 16px;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--md-sys-color-on-surface-variant);
+    font: 500 14px/20px var(--md-sys-typescale-font);
+    cursor: text;
+    transition: background .18s, border-color .18s;
+  }
+  .tb-search:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent); }
+  .tb-search:focus-within { border-color: var(--md-sys-color-primary); }
+  .tb-search input { border: none; outline: none; background: transparent; color: var(--md-sys-color-on-surface); font: inherit; width: 100%; }
+  .tb-search .material-symbols-rounded { font-size: 20px; }
+
+  /* Running / pinned app rail */
+  .tb-rail {
+    display: flex; align-items: center; gap: 4px;
+    justify-content: center;
+  }
+  .tb-app {
+    position: relative;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: transparent;
+    border: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .18s, transform .2s var(--md-sys-motion-easing-spring-fast);
+    color: white;
+  }
+  .tb-app:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent); transform: translateY(-2px); }
+  .tb-app:active { transform: scale(.9); }
+  .tb-app .chip {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  }
+  .tb-app .chip .material-symbols-rounded { font-size: 20px; font-variation-settings: 'FILL' 1; }
+  /* Running indicator: pill at bottom */
+  .tb-app .run {
+    position: absolute;
+    left: 50%; bottom: 2px;
+    transform: translateX(-50%);
+    width: 6px; height: 3px;
+    border-radius: 100px;
+    background: var(--md-sys-color-on-surface-variant);
+    transition: width .2s var(--md-sys-motion-easing-spring-fast), background .2s;
+  }
+  .tb-app.running .run { width: 14px; background: var(--md-sys-color-primary); }
+  .tb-app.active .run { width: 22px; background: var(--md-sys-color-primary); }
+  .tb-app.active { background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent); }
+  .tb-app .preview {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: 220px;
+    padding: 10px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 95%, transparent);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--md-sys-elevation-3);
+    color: var(--md-sys-color-on-surface);
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s, transform .22s var(--md-sys-motion-easing-spring-fast);
+    z-index: 5;
+  }
+  .tb-app:hover .preview { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .tb-app .preview .th {
+    height: 110px; border-radius: 10px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary) 35%, var(--md-sys-color-surface-container)), var(--md-sys-color-surface-container-low));
+    margin-bottom: 8px;
+    position: relative; overflow: hidden;
+  }
+  .tb-app .preview .pv-title { font: 600 12px/16px var(--md-sys-typescale-font); }
+  .tb-app .preview .pv-sub { font: 400 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+
+  /* Tray */
+  .tb-tray {
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 6px;
+  }
+  .tb-tray-btn {
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: transparent; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--md-sys-color-on-surface);
+    font: 500 12px/16px var(--md-sys-typescale-font);
+    transition: background .18s;
+  }
+  .tb-tray-btn:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .tb-tray-btn .material-symbols-rounded { font-size: 18px; }
+  .tb-tray-stack {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    line-height: 1;
+  }
+  .tb-tray-stack .time { font: 600 14px/16px var(--md-sys-typescale-font); }
+  .tb-tray-stack .date { font: 500 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+  .tb-tray .sys {
+    display: inline-flex; gap: 2px;
+    padding: 0 6px;
+  }
+  .tb-tray .sys .ic { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: var(--md-sys-color-on-surface); position: relative; }
+  .tb-tray .sys .ic:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); cursor: pointer; }
+  .tb-tray .sys .ic .material-symbols-rounded { font-size: 18px; }
+  .tb-tray .sys .ic .dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; background: var(--md-sys-color-primary); border-radius: 50%; }
+
+  .tb-show-desktop {
+    width: 6px; height: 44px;
+    border-left: 1px solid var(--md-sys-color-outline-variant);
+    margin-left: 4px;
+    cursor: pointer;
+  }
+
+  /* ---------------- Start menu / App drawer ---------------- */
+  .bd-panel {
+    position: absolute;
+    bottom: 84px;
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 82%, transparent);
+    backdrop-filter: blur(32px) saturate(1.5);
+    -webkit-backdrop-filter: blur(32px) saturate(1.5);
+    border: 1px solid color-mix(in srgb, white 8%, transparent);
+    box-shadow: 0 20px 48px rgba(0,0,0,.45);
+    color: var(--md-sys-color-on-surface);
+    z-index: 50;
+    transform-origin: bottom center;
+    opacity: 0; transform: translateY(12px) scale(.96);
+    pointer-events: none;
+    transition: opacity .2s, transform .28s var(--md-sys-motion-easing-spring-fast);
+  }
+  .bd-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+  /* Start menu */
+  .bd-start {
+    left: 20px;
+    width: 720px;
+    height: 560px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 24px;
+    gap: 20px;
+  }
+  .bd-start .search {
+    height: 52px;
+    border-radius: 100px;
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent);
+    display: flex; align-items: center; gap: 12px; padding: 0 20px;
+    font: 500 15px/20px var(--md-sys-typescale-font);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .bd-start .sect-title {
+    display: flex; justify-content: space-between; align-items: center;
+    font: 600 14px/20px var(--md-sys-typescale-font);
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 12px;
+  }
+  .bd-start .sect-title .link {
+    font: 500 13px/18px var(--md-sys-typescale-font);
+    color: var(--md-sys-color-primary);
+    display: inline-flex; gap: 4px; align-items: center;
+    cursor: pointer;
+  }
+  .bd-start .pinned-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px 0;
+  }
+  .bd-start .content {
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 20px;
+    padding-right: 4px;
+  }
+  .apd-tile {
+    padding: 12px 8px;
+    border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer;
+    transition: background .16s;
+  }
+  .apd-tile:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .apd-tile .chip { width: 52px; height: 52px; border-radius: 16px; display:flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+  .apd-tile .chip .material-symbols-rounded { font-size: 26px; font-variation-settings: 'FILL' 1; }
+  .apd-tile .nm { font: 500 12px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); text-align: center; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .recents-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .rec-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+  }
+  .rec-row:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .rec-row .ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+  .rec-row .ic .material-symbols-rounded { font-size: 20px; font-variation-settings: 'FILL' 1; }
+  .rec-row .meta { min-width: 0; flex: 1; }
+  .rec-row .nm { font: 500 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rec-row .sub { font: 400 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+
+  .bd-start .user-rail {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 8px 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .bd-start .user-rail .me { display: flex; align-items: center; gap: 12px; }
+  .bd-start .user-rail .me .av {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #8B6BE8, #EFBCE4);
+    color: white;
+    font: 600 15px/40px var(--md-sys-typescale-font);
+    text-align: center;
+  }
+  .bd-start .user-rail .me .nm { font: 600 14px/18px var(--md-sys-typescale-font); }
+  .bd-start .user-rail .me .em { font: 400 12px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+  .bd-start .user-rail .pwr { display: flex; gap: 2px; }
+  .bd-start .user-rail .pwr .b {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--md-sys-color-on-surface); cursor: pointer;
+    background: transparent; border: none;
+  }
+  .bd-start .user-rail .pwr .b:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+
+  /* ---------------- Calendar panel ---------------- */
+  .bd-calendar {
+    right: 20px;
+    width: 360px;
+    max-height: calc(100% - 104px);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    overflow: hidden;
+  }
+  .cal-clock .big { font: 500 40px/44px var(--md-sys-typescale-font); letter-spacing: -1px; }
+  .cal-clock .sub { font: 500 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); margin-top: 2px; }
+  .cal-head { display: flex; align-items: center; gap: 4px; }
+  .cal-head .mo { flex: 1; text-align: center; font: 600 15px/20px var(--md-sys-typescale-font); }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+    font: 500 12px/1 var(--md-sys-typescale-font);
+  }
+  .cal-grid .dow { text-align: center; color: var(--md-sys-color-on-surface-variant); padding: 6px 0; font-size: 11px; }
+  .cal-grid .d {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+  }
+  .cal-grid .d.mute { color: color-mix(in srgb, var(--md-sys-color-on-surface) 35%, transparent); }
+  .cal-grid .d:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .cal-grid .d.today { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font-weight: 700; }
+  .cal-grid .d.ev::after {
+    content: ''; position: absolute; margin-top: 22px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--md-sys-color-primary);
+  }
+  .cal-agenda { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; flex: 1; }
+  .cal-agenda .ag-head { font: 600 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+  .cal-agenda .ag-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 60%, transparent);
+    border-radius: 16px; padding: 12px 14px;
+  }
+  .cal-agenda .ag-item .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .cal-agenda .ag-item .t { font: 500 14px/18px var(--md-sys-typescale-font); }
+  .cal-agenda .ag-item .s { font: 400 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); margin-top: 2px; }
+  .cal-foot { display: flex; gap: 6px; border-top: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); padding-top: 10px; }
+
+  /* ---------------- Notification / Quick center ---------------- */
+  .bd-notif {
+    right: 20px;
+    width: 420px;
+    max-height: calc(100% - 104px);
+    padding: 20px;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 14px;
+    overflow: hidden;
+  }
+  .qs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; min-width: 0; }
+  .qs-tile {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 70%, transparent);
+    border-radius: 18px;
+    padding: 10px 12px;
+    min-height: 68px;
+    min-width: 0;
+    overflow: hidden;
+    display: flex; flex-direction: column; justify-content: space-between;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .18s, border-color .18s;
+  }
+  .qs-tile .nm, .qs-tile .sub {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .qs-tile:hover { background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 90%, transparent); }
+  .qs-tile.on {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+  .qs-tile.on .sub { color: color-mix(in srgb, var(--md-sys-color-on-primary) 80%, transparent); }
+  .qs-tile .top { display: flex; justify-content: space-between; align-items: center; }
+  .qs-tile .top .material-symbols-rounded { font-size: 22px; font-variation-settings: 'FILL' 1; }
+  .qs-tile .nm { font: 600 12px/16px var(--md-sys-typescale-font); margin-top: 4px; }
+  .qs-tile .sub { font: 400 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+
+  .qs-sliders { display: flex; flex-direction: column; gap: 10px; padding: 6px 2px 2px; }
+  .qs-slider {
+    display: flex; align-items: center; gap: 10px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 60%, transparent);
+    padding: 8px 12px; border-radius: 100px;
+  }
+  .qs-slider .material-symbols-rounded { font-size: 18px; color: var(--md-sys-color-on-surface-variant); }
+  .qs-bar {
+    flex: 1; height: 8px; border-radius: 100px;
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 14%, transparent);
+    position: relative; overflow: hidden;
+  }
+  .qs-bar::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: var(--v, 60%);
+    background: var(--md-sys-color-primary);
+    border-radius: inherit;
+  }
+
+  .notif-list {
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+    padding-right: 4px;
+  }
+  .notif-group {
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 60%, transparent);
+    border-radius: 22px;
+    padding: 4px;
+  }
+  .notif-card {
+    background: transparent;
+    border-radius: 18px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 10px;
+    align-items: start;
+  }
+  .notif-card + .notif-card { border-top: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+  .notif-card .ic {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .notif-card .ic .material-symbols-rounded { font-size: 18px; font-variation-settings: 'FILL' 1; }
+  .notif-card .main .t { display: flex; justify-content: space-between; gap: 8px; font: 600 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); }
+  .notif-card .main .t .ago { font-weight: 500; color: var(--md-sys-color-on-surface-variant); font-size: 11px; }
+  .notif-card .main .h { font: 600 14px/20px var(--md-sys-typescale-font); margin-top: 2px; color: var(--md-sys-color-on-surface); }
+  .notif-card .main .b { font: 400 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); text-wrap: pretty; }
+  .notif-card .main .actions { display: flex; gap: 6px; margin-top: 8px; }
+  .notif-card .main .actions .a-btn {
+    height: 30px; padding: 0 12px;
+    border-radius: 100px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: transparent; color: var(--md-sys-color-primary);
+    font: 600 12px/16px var(--md-sys-typescale-font);
+    cursor: pointer;
+  }
+  .notif-card .main .actions .a-btn.filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-color: transparent; }
+  .notif-card .close {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--md-sys-color-on-surface-variant); cursor: pointer;
+    opacity: 0; transition: opacity .15s;
+  }
+  .notif-card:hover .close { opacity: 1; }
+  .notif-card .close .material-symbols-rounded { font-size: 14px; }
+
+  .notif-head { display: flex; justify-content: space-between; align-items: center; }
+  .notif-head .h { font: 600 14px/20px var(--md-sys-typescale-font); }
+  .notif-head .clear { font: 600 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-primary); cursor: pointer; }
+
+  /* Media player card in notif center */
+  .media-card {
+    background: linear-gradient(135deg, #3A2366 0%, #6B4AAA 100%);
+    color: #fff;
+    border-radius: 22px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .media-card .art {
+    width: 56px; height: 56px; border-radius: 12px;
+    background: linear-gradient(135deg, #EFBCE4, #B68CF5);
+    display: flex; align-items: center; justify-content: center;
+    color: #3A2366;
+  }
+  .media-card .art .material-symbols-rounded { font-size: 26px; font-variation-settings: 'FILL' 1; }
+  .media-card .song { font: 600 14px/18px var(--md-sys-typescale-font); }
+  .media-card .artist { font: 500 12px/16px var(--md-sys-typescale-font); opacity: .8; }
+  .media-card .controls { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .media-card .controls .m-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.15); color: white; cursor: pointer; border: none;
+  }
+  .media-card .controls .m-btn.play { background: white; color: #3A2366; width: 32px; height: 32px; }
+  .media-card .controls .m-btn .material-symbols-rounded { font-size: 16px; font-variation-settings: 'FILL' 1; }
+
+  /* ---------------- Recents / Overview ---------------- */
+  .bd-overview {
+    position: absolute;
+    inset: 0;
+    background: rgba(20,18,24,.58);
+    backdrop-filter: blur(18px);
+    display: flex; flex-direction: column;
+    padding: 48px 0 104px;
+    z-index: 30;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+  }
+  .bd-overview.open { opacity: 1; pointer-events: auto; }
+  .bd-overview .ov-head { text-align: center; color: white; margin-bottom: 28px; }
+  .bd-overview .ov-head .t { font: 500 28px/36px var(--md-sys-typescale-font); }
+  .bd-overview .ov-head .s { font: 400 14px/20px var(--md-sys-typescale-font); opacity: .7; }
+  .bd-overview .strip {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 0 48px;
+  }
+  .ov-card {
+    flex-shrink: 0;
+    width: 400px; height: 260px;
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: 22px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.45);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+    transform: scale(.96);
+    transition: transform .2s var(--md-sys-motion-easing-spring-fast);
+  }
+  .ov-card:hover { transform: scale(1); }
+  .ov-card .ov-chrome { height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--md-sys-color-surface-container); font: 600 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); }
+  .ov-card .ov-chrome .dot { width: 16px; height: 16px; border-radius: 5px; display: flex; align-items: center; justify-content: center; color: white; }
+  .ov-card .ov-chrome .dot .material-symbols-rounded { font-size: 12px; font-variation-settings: 'FILL' 1; }
+  .ov-card .ov-body { flex: 1; padding: 16px; overflow: hidden; position: relative; }
+  .ov-card .close {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(0,0,0,.4); color: white;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    z-index: 2;
+  }
+  .ov-card .close .material-symbols-rounded { font-size: 16px; }
+
+  /* Context menu */
+  .bd-ctx {
+    position: absolute;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container-high) 92%, transparent);
+    backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in srgb, white 6%, transparent);
+    border-radius: 14px;
+    box-shadow: var(--md-sys-elevation-3);
+    padding: 6px;
+    min-width: 220px;
+    z-index: 60;
+    opacity: 0; pointer-events: none;
+    transform: scale(.95) translateY(-4px);
+    transform-origin: top left;
+    transition: opacity .14s, transform .18s var(--md-sys-motion-easing-emphasized);
+  }
+  .bd-ctx.open { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+  .bd-ctx .ci {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: 500 13px/18px var(--md-sys-typescale-font);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+  }
+  .bd-ctx .ci:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  .bd-ctx .ci .material-symbols-rounded { font-size: 18px; color: var(--md-sys-color-on-surface-variant); }
+  .bd-ctx .sep { height: 1px; background: var(--md-sys-color-outline-variant); margin: 4px 8px; }
+
+  /* ---- Colored icon backgrounds ---- */
+  .ic-purple { background: linear-gradient(135deg, #7B5CE1, #B68CF5); }
+  .ic-pink   { background: linear-gradient(135deg, #D96CAE, #EFBCE4); }
+  .ic-blue   { background: linear-gradient(135deg, #4D7CE9, #8FB2F3); }
+  .ic-teal   { background: linear-gradient(135deg, #2EA49B, #6FD8CC); }
+  .ic-orange { background: linear-gradient(135deg, #E0853F, #F5BC88); }
+  .ic-green  { background: linear-gradient(135deg, #3FA15E, #82D89E); }
+  .ic-red    { background: linear-gradient(135deg, #D9453F, #F19F9A); }
+  .ic-amber  { background: linear-gradient(135deg, #D7A42B, #F0CA6B); }
+  .ic-slate  { background: linear-gradient(135deg, #5D5970, #8A8597); }
+  .ic-cyan   { background: linear-gradient(135deg, #2B90D9, #75BEE9); }
+  .ic-indigo { background: linear-gradient(135deg, #4A46B8, #7E7BDA); }
+
+  /* ---- floating toggle dock at top-right (debugging convenience)  ---- */
+  .bd-dock {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: color-mix(in srgb, var(--md-sys-color-surface-container) 55%, transparent);
+    backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in srgb, white 8%, transparent);
+    border-radius: 100px;
+    padding: 4px;
+    display: flex; gap: 2px;
+    z-index: 45;
+    color: white;
+    font: 500 11px/14px var(--md-sys-typescale-font);
+  }
+  .bd-dock button {
+    background: transparent; border: none;
+    color: white; cursor: pointer;
+    height: 32px; padding: 0 14px; border-radius: 100px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 600 11px/14px var(--md-sys-typescale-font);
+    letter-spacing: .3px;
+  }
+  .bd-dock button:hover { background: color-mix(in srgb, white 12%, transparent); }
+  .bd-dock button .material-symbols-rounded { font-size: 14px; }
+
+  /* little sparkle window content */
+  .email-app { padding: 20px 24px; color: var(--md-sys-color-on-surface); overflow: auto; height: 100%; }
+  .email-row {
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; padding: 10px 8px; border-radius: 14px; cursor: pointer;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .email-row:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent); }
+  .email-row .av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font: 600 13px/18px var(--md-sys-typescale-font); }
+  .email-row .from { font: 600 13px/18px var(--md-sys-typescale-font); }
+  .email-row .subject { font: 500 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface); }
+  .email-row .snippet { font: 400 12px/16px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .email-row .when { font: 500 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant); }
+
+  /* scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--md-sys-color-on-surface) 18%, transparent); border-radius: 100px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="bd-desktop" id="desktop" data-screen-label="BoringdroidSystemUI">
+
+  <div class="bd-wallpaper-decor">
+    <div class="orb a"></div>
+    <div class="orb b"></div>
+    <div class="orb c"></div>
+  </div>
+
+  <!-- Desktop icons -->
+  <div class="bd-desktop-icons" id="desktopIcons"></div>
+
+  <!-- Floating windows -->
+  <div class="bd-window" id="winFiles" style="width: 820px; height: 520px; left: 140px; top: 64px;">
+    <div class="win-chrome">
+      <div class="win-title">
+        <span class="dot ic-amber"><span class="material-symbols-rounded">folder</span></span>
+        Files
+      </div>
+      <button class="win-ctrl"><span class="material-symbols-rounded">remove</span></button>
+      <button class="win-ctrl"><span class="material-symbols-rounded">crop_square</span></button>
+      <button class="win-ctrl close" onclick="closeWindow('winFiles')"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="win-body">
+      <div class="files-app">
+        <div class="files-side">
+          <div class="group">Quick access</div>
+          <div class="item active"><span class="material-symbols-rounded">home</span>Home</div>
+          <div class="item"><span class="material-symbols-rounded">download</span>Downloads</div>
+          <div class="item"><span class="material-symbols-rounded">description</span>Documents</div>
+          <div class="item"><span class="material-symbols-rounded">image</span>Pictures</div>
+          <div class="item"><span class="material-symbols-rounded">movie</span>Videos</div>
+          <div class="group">Devices</div>
+          <div class="item"><span class="material-symbols-rounded">hard_drive</span>Internal (128 GB)</div>
+          <div class="item"><span class="material-symbols-rounded">usb</span>USB-C Drive</div>
+          <div class="group">Cloud</div>
+          <div class="item"><span class="material-symbols-rounded">cloud</span>Drive</div>
+        </div>
+        <div class="files-main">
+          <div class="path"><span>Home</span><span class="sep">›</span><span>Projects</span><span class="sep">›</span><span>Boringdroid</span></div>
+          <div class="files-grid">
+            <div class="file-tile"><div class="ft-ic ic-amber"><span class="material-symbols-rounded">folder</span></div><div class="ft-name">assets</div><div class="ft-meta">12 items</div></div>
+            <div class="file-tile"><div class="ft-ic ic-amber"><span class="material-symbols-rounded">folder</span></div><div class="ft-name">kernel</div><div class="ft-meta">204 items</div></div>
+            <div class="file-tile"><div class="ft-ic ic-amber"><span class="material-symbols-rounded">folder</span></div><div class="ft-name">system-ui</div><div class="ft-meta">48 items</div></div>
+            <div class="file-tile"><div class="ft-ic ic-blue"><span class="material-symbols-rounded">description</span></div><div class="ft-name">README.md</div><div class="ft-meta">4 KB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-green"><span class="material-symbols-rounded">terminal</span></div><div class="ft-name">build.sh</div><div class="ft-meta">1 KB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-purple"><span class="material-symbols-rounded">image</span></div><div class="ft-name">wallpaper_01.png</div><div class="ft-meta">2.8 MB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-purple"><span class="material-symbols-rounded">image</span></div><div class="ft-name">wallpaper_02.png</div><div class="ft-meta">3.1 MB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-pink"><span class="material-symbols-rounded">movie</span></div><div class="ft-name">demo.mp4</div><div class="ft-meta">22 MB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-teal"><span class="material-symbols-rounded">archive</span></div><div class="ft-name">release-2.1.tar.gz</div><div class="ft-meta">48 MB</div></div>
+            <div class="file-tile"><div class="ft-ic ic-slate"><span class="material-symbols-rounded">settings</span></div><div class="ft-name">.boringdroid</div><div class="ft-meta">hidden</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bd-window" id="winMail" style="width: 520px; height: 380px; left: 560px; top: 220px;">
+    <div class="win-chrome">
+      <div class="win-title">
+        <span class="dot ic-red"><span class="material-symbols-rounded">mail</span></span>
+        Mail — Inbox
+      </div>
+      <button class="win-ctrl"><span class="material-symbols-rounded">remove</span></button>
+      <button class="win-ctrl"><span class="material-symbols-rounded">crop_square</span></button>
+      <button class="win-ctrl close" onclick="closeWindow('winMail')"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="win-body">
+      <div class="email-app">
+        <div class="email-row">
+          <div class="av ic-purple">LM</div>
+          <div>
+            <div class="from">Lena Mori</div>
+            <div class="subject">Re: taskbar preview sizing</div>
+            <div class="snippet">Pushed a fix — let me know if the hover window pops correctly now…</div>
+          </div>
+          <div class="when">10:42</div>
+        </div>
+        <div class="email-row">
+          <div class="av ic-green">GH</div>
+          <div>
+            <div class="from">GitHub</div>
+            <div class="subject">[boringdroid/system-ui] PR #218 approved</div>
+            <div class="snippet">Your changes have been approved and are ready to merge.</div>
+          </div>
+          <div class="when">09:18</div>
+        </div>
+        <div class="email-row">
+          <div class="av ic-blue">AD</div>
+          <div>
+            <div class="from">Anders D.</div>
+            <div class="subject">Weekly sync — notes</div>
+            <div class="snippet">Agenda for Thursday: overview polish, battery saver, gesture tuning…</div>
+          </div>
+          <div class="when">Yesterday</div>
+        </div>
+        <div class="email-row">
+          <div class="av ic-orange">JS</div>
+          <div>
+            <div class="from">Juno S.</div>
+            <div class="subject">Icons for Settings plugin</div>
+            <div class="snippet">Draft sheet attached — swapped the rounded weights per your note.</div>
+          </div>
+          <div class="when">Tue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bd-window" id="winTerm" style="width: 480px; height: 280px; left: 80px; bottom: 140px;">
+    <div class="win-chrome">
+      <div class="win-title">
+        <span class="dot ic-slate"><span class="material-symbols-rounded">terminal</span></span>
+        Terminal — zsh
+      </div>
+      <button class="win-ctrl"><span class="material-symbols-rounded">remove</span></button>
+      <button class="win-ctrl"><span class="material-symbols-rounded">crop_square</span></button>
+      <button class="win-ctrl close" onclick="closeWindow('winTerm')"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="win-body">
+      <div class="term-app">
+        <div><span class="pr">~/boringdroid</span> <span class="dim">∙ main</span> $ git status</div>
+        <div class="dim">On branch main</div>
+        <div class="dim">Your branch is up to date with 'origin/main'.</div>
+        <div>&nbsp;</div>
+        <div><span class="pr">~/boringdroid</span> <span class="dim">∙ main</span> $ ./build.sh --target=systemui</div>
+        <div class="dim">→ compiling kotlin sources…   84 files</div>
+        <div class="dim">→ packaging resources…</div>
+        <div class="ok">✓ systemui.apk  (18.4 MB)</div>
+        <div>&nbsp;</div>
+        <div><span class="pr">~/boringdroid</span> <span class="dim">∙ main</span> $ <span style="border-left: 2px solid #D0BCFF; margin-left: 2px; animation: blink 1s step-end infinite;"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start menu -->
+  <div class="bd-panel bd-start" id="startMenu">
+    <div class="search">
+      <span class="material-symbols-rounded">search</span>
+      Search apps, files, settings
+      <span style="margin-left:auto; font: 500 11px/14px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant);">Super</span>
+    </div>
+    <div class="content">
+      <div>
+        <div class="sect-title">
+          <span>Pinned</span>
+          <span class="link">All apps <span class="material-symbols-rounded" style="font-size:14px">chevron_right</span></span>
+        </div>
+        <div class="pinned-grid" id="pinnedGrid"></div>
+      </div>
+      <div>
+        <div class="sect-title">
+          <span>Recommended</span>
+          <span class="link">More <span class="material-symbols-rounded" style="font-size:14px">chevron_right</span></span>
+        </div>
+        <div class="recents-grid" id="recentsGrid"></div>
+      </div>
+    </div>
+    <div class="user-rail">
+      <div class="me">
+        <div class="av">KT</div>
+        <div>
+          <div class="nm">Kai Tamura</div>
+          <div class="em">kai@boringdroid.dev</div>
+        </div>
+      </div>
+      <div class="pwr">
+        <button class="b" title="Lock"><span class="material-symbols-rounded">lock</span></button>
+        <button class="b" title="Sign out"><span class="material-symbols-rounded">logout</span></button>
+        <button class="b" title="Power"><span class="material-symbols-rounded">power_settings_new</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification + quick settings -->
+  <div class="bd-panel bd-notif" id="notifPanel">
+    <div>
+      <div style="display:flex; justify-content: space-between; align-items:flex-end; margin-bottom: 6px;">
+        <div>
+          <div style="font: 500 28px/32px var(--md-sys-typescale-font);" id="bigTime">9:41</div>
+          <div style="font: 500 13px/18px var(--md-sys-typescale-font); color: var(--md-sys-color-on-surface-variant);" id="bigDate">Sunday, April 19</div>
+        </div>
+        <div style="display:flex; gap:2px;">
+          <button class="m3-icon-btn" title="Edit"><span class="material-symbols-rounded">edit</span></button>
+          <button class="m3-icon-btn" title="Settings"><span class="material-symbols-rounded">settings</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="qs-grid" id="qsGrid"></div>
+    <div class="qs-sliders">
+      <div class="qs-slider">
+        <span class="material-symbols-rounded">wb_sunny</span>
+        <div class="qs-bar" style="--v: 72%"></div>
+      </div>
+      <div class="qs-slider">
+        <span class="material-symbols-rounded">volume_up</span>
+        <div class="qs-bar" style="--v: 40%"></div>
+      </div>
+    </div>
+    <div class="notif-list">
+      <div class="media-card">
+        <div class="art"><span class="material-symbols-rounded">music_note</span></div>
+        <div>
+          <div class="song">Midnight Orbit</div>
+          <div class="artist">Runa Velvet · Afterglow</div>
+          <div class="controls">
+            <button class="m-btn"><span class="material-symbols-rounded">skip_previous</span></button>
+            <button class="m-btn play"><span class="material-symbols-rounded">pause</span></button>
+            <button class="m-btn"><span class="material-symbols-rounded">skip_next</span></button>
+            <div style="flex:1; font: 500 11px/14px var(--md-sys-typescale-font); text-align:right; opacity:.8;">1:42 / 3:58</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-head"><span class="h">Earlier today</span><span class="clear">Clear all</span></div>
+
+      <div class="notif-group">
+        <div class="notif-card">
+          <div class="ic ic-green"><span class="material-symbols-rounded">chat</span></div>
+          <div class="main">
+            <div class="t"><span>Messages · Lena Mori</span><span class="ago">now</span></div>
+            <div class="h">Pushed a fix for the taskbar preview</div>
+            <div class="b">Let me know if the hover window pops correctly on 125% scale.</div>
+            <div class="actions">
+              <button class="a-btn filled">Reply</button>
+              <button class="a-btn">Mark read</button>
+            </div>
+          </div>
+          <div class="close"><span class="material-symbols-rounded">close</span></div>
+        </div>
+        <div class="notif-card">
+          <div class="ic ic-green"><span class="material-symbols-rounded">chat</span></div>
+          <div class="main">
+            <div class="t"><span>Messages · #systemui</span><span class="ago">8m</span></div>
+            <div class="h">3 new messages in #systemui</div>
+            <div class="b">Anders, Juno and 1 other shared updates about the overview gesture.</div>
+          </div>
+          <div class="close"><span class="material-symbols-rounded">close</span></div>
+        </div>
+      </div>
+
+      <div class="notif-group">
+        <div class="notif-card">
+          <div class="ic ic-blue"><span class="material-symbols-rounded">calendar_today</span></div>
+          <div class="main">
+            <div class="t"><span>Calendar</span><span class="ago">11:00</span></div>
+            <div class="h">Weekly SystemUI sync in 15 min</div>
+            <div class="b">Meet — Anders, Juno, Lena · Thursday focus: overview polish.</div>
+            <div class="actions">
+              <button class="a-btn filled">Join</button>
+              <button class="a-btn">Snooze 5 min</button>
+            </div>
+          </div>
+          <div class="close"><span class="material-symbols-rounded">close</span></div>
+        </div>
+      </div>
+
+      <div class="notif-group">
+        <div class="notif-card">
+          <div class="ic ic-amber"><span class="material-symbols-rounded">system_update</span></div>
+          <div class="main">
+            <div class="t"><span>System update</span><span class="ago">1h</span></div>
+            <div class="h">Boringdroid 14.2 ready to install</div>
+            <div class="b">Restart to apply · 214 MB · signed build.</div>
+            <div class="actions">
+              <button class="a-btn filled">Restart now</button>
+              <button class="a-btn">Tonight</button>
+            </div>
+          </div>
+          <div class="close"><span class="material-symbols-rounded">close</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overview / Recents -->
+  <div class="bd-overview" id="overview">
+    <div class="ov-head">
+      <div class="t">Recents</div>
+      <div class="s">Swipe across · Esc to exit</div>
+    </div>
+    <div class="strip" id="ovStrip"></div>
+  </div>
+
+  <!-- Calendar & clock panel -->
+  <div class="bd-panel bd-calendar" id="calPanel">
+    <div class="cal-clock">
+      <div class="big" id="calTime">9:41</div>
+      <div class="sub" id="calSub">Sunday, April 19, 2026</div>
+    </div>
+    <div class="cal-head">
+      <button class="m3-icon-btn"><span class="material-symbols-rounded">chevron_left</span></button>
+      <div class="mo">April 2026</div>
+      <button class="m3-icon-btn"><span class="material-symbols-rounded">chevron_right</span></button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-agenda">
+      <div class="ag-head">Today's agenda</div>
+      <div class="ag-item"><span class="dot" style="background: var(--md-sys-color-primary);"></span><div><div class="t">SystemUI weekly sync</div><div class="s">11:00 – 11:30 · Google Meet</div></div></div>
+      <div class="ag-item"><span class="dot" style="background: oklch(0.72 0.15 160);"></span><div><div class="t">Design review — taskbar previews</div><div class="s">14:00 – 15:00 · Room Aurora</div></div></div>
+      <div class="ag-item"><span class="dot" style="background: oklch(0.72 0.15 60);"></span><div><div class="t">Ship 14.2.3 release notes</div><div class="s">Due today</div></div></div>
+    </div>
+    <div class="cal-foot">
+      <button class="m3-btn text"><span class="material-symbols-rounded">add</span>Add event</button>
+      <button class="m3-btn text"><span class="material-symbols-rounded">schedule</span>Timers</button>
+    </div>
+  </div>
+
+  <!-- Context menu (right-click desktop) -->
+  <div class="bd-ctx" id="ctxMenu">
+    <div class="ci"><span class="material-symbols-rounded">refresh</span>Refresh</div>
+    <div class="ci"><span class="material-symbols-rounded">grid_view</span>View<span style="margin-left:auto; color: var(--md-sys-color-on-surface-variant)">›</span></div>
+    <div class="ci"><span class="material-symbols-rounded">sort</span>Sort by<span style="margin-left:auto; color: var(--md-sys-color-on-surface-variant)">›</span></div>
+    <div class="sep"></div>
+    <div class="ci"><span class="material-symbols-rounded">add_photo_alternate</span>Change wallpaper</div>
+    <div class="ci"><span class="material-symbols-rounded">palette</span>Personalize</div>
+    <div class="sep"></div>
+    <div class="ci"><span class="material-symbols-rounded">create_new_folder</span>New folder</div>
+    <div class="ci"><span class="material-symbols-rounded">terminal</span>Open in Terminal</div>
+    <div class="ci"><span class="material-symbols-rounded">settings</span>Display settings</div>
+  </div>
+
+  <!-- Dock (demo-only controls) -->
+  <div class="bd-dock">
+    <button onclick="toggleStart()"><span class="material-symbols-rounded">apps</span> Start</button>
+    <button onclick="toggleNotif()"><span class="material-symbols-rounded">notifications</span> Center</button>
+    <button onclick="toggleOverview()"><span class="material-symbols-rounded">select_window</span> Recents</button>
+    <button onclick="window.location.href='BoringdroidSettings.html'"><span class="material-symbols-rounded">tune</span> Settings</button>
+  </div>
+
+  <!-- Taskbar -->
+  <div class="bd-taskbar">
+    <div class="tb-start-cluster">
+      <button class="tb-start" onclick="toggleStart()" aria-label="Start">
+        <span class="material-symbols-rounded">grid_view</span>
+      </button>
+      <div class="tb-search" onclick="toggleStart()">
+        <span class="material-symbols-rounded">search</span>
+        <span>Search</span>
+      </div>
+    </div>
+    <div class="tb-rail" id="tbRail"></div>
+    <div class="tb-tray">
+      <div class="sys">
+        <div class="ic" title="Network"><span class="material-symbols-rounded">wifi</span></div>
+        <div class="ic" title="Volume"><span class="material-symbols-rounded">volume_up</span></div>
+        <div class="ic" title="Battery"><span class="material-symbols-rounded">battery_5_bar</span></div>
+        <div class="ic" title="Bluetooth"><span class="material-symbols-rounded">bluetooth</span></div>
+        <div class="ic" title="Input"><span style="font: 600 12px/1 var(--md-sys-typescale-font); letter-spacing: .5px;">EN</span></div>
+      </div>
+      <button class="tb-tray-btn" onclick="toggleNotif()" title="Notifications" style="position:relative;">
+        <span class="material-symbols-rounded">notifications</span>
+        <span class="m3-badge" style="position:absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; font-size: 10px;">4</span>
+      </button>
+      <button class="tb-tray-btn" onclick="toggleCalendar()" title="Calendar and clock">
+        <div class="tb-tray-stack">
+          <span class="time" id="trayTime">9:41</span>
+          <span class="date" id="trayDate">Sun, Apr 19</span>
+        </div>
+      </button>
+      <div class="tb-show-desktop" title="Show desktop" onclick="showDesktop()"></div>
+    </div>
+  </div>
+
+</div>
+
+<style>@keyframes blink { 50% { opacity: 0; } }</style>
+
+<script>
+  // ---------- Data ----------
+  const APPS = [
+    { id: 'files',     name: 'Files',      icon: 'folder',          color: 'ic-amber'  },
+    { id: 'chrome',    name: 'Browser',    icon: 'public',          color: 'ic-blue'   },
+    { id: 'mail',      name: 'Mail',       icon: 'mail',            color: 'ic-red'    },
+    { id: 'calendar',  name: 'Calendar',   icon: 'event',           color: 'ic-cyan'   },
+    { id: 'photos',    name: 'Photos',     icon: 'photo',           color: 'ic-pink'   },
+    { id: 'music',     name: 'Music',      icon: 'music_note',      color: 'ic-purple' },
+    { id: 'messages',  name: 'Messages',   icon: 'chat',            color: 'ic-green'  },
+    { id: 'camera',    name: 'Camera',     icon: 'photo_camera',    color: 'ic-slate'  },
+    { id: 'maps',      name: 'Maps',       icon: 'map',             color: 'ic-teal'   },
+    { id: 'store',     name: 'Store',      icon: 'shopping_bag',    color: 'ic-indigo' },
+    { id: 'terminal',  name: 'Terminal',   icon: 'terminal',        color: 'ic-slate'  },
+    { id: 'settings',  name: 'Settings',   icon: 'settings',        color: 'ic-slate'  },
+    { id: 'notes',     name: 'Notes',      icon: 'sticky_note_2',   color: 'ic-amber'  },
+    { id: 'code',      name: 'Code',       icon: 'code',            color: 'ic-indigo' },
+    { id: 'weather',   name: 'Weather',    icon: 'partly_cloudy_day', color: 'ic-cyan' },
+    { id: 'calc',      name: 'Calculator', icon: 'calculate',       color: 'ic-orange' },
+    { id: 'clock',     name: 'Clock',      icon: 'schedule',        color: 'ic-pink'   },
+    { id: 'video',     name: 'Videos',     icon: 'movie',           color: 'ic-red'    },
+  ];
+
+  const PINNED_IDS    = ['files','chrome','mail','calendar','photos','music','messages','camera','maps','store','terminal','settings'];
+  const TASKBAR_PINS  = ['chrome','files','mail','photos','terminal','code','music'];
+  const RUNNING_IDS   = ['files','mail','terminal'];
+  const ACTIVE_ID     = 'files';
+
+  // ---------- Taskbar rail ----------
+  const railEl = document.getElementById('tbRail');
+  TASKBAR_PINS.forEach(id => {
+    const app = APPS.find(a => a.id === id);
+    const btn = document.createElement('button');
+    btn.className = 'tb-app';
+    if (RUNNING_IDS.includes(id)) btn.classList.add('running');
+    if (id === ACTIVE_ID) btn.classList.add('active');
+    btn.title = app.name;
+    btn.innerHTML = `
+      <div class="chip ${app.color}"><span class="material-symbols-rounded">${app.icon}</span></div>
+      <div class="run"></div>
+      ${RUNNING_IDS.includes(id) ? `
+        <div class="preview">
+          <div class="th">
+            <div style="position:absolute; left:8px; bottom:8px; right:8px;">
+              <div style="background: rgba(0,0,0,.4); border-radius:6px; padding:4px 6px; font: 600 10px/12px var(--md-sys-typescale-font); color: white;">${app.name}</div>
+            </div>
+          </div>
+          <div class="pv-title">${app.name}</div>
+          <div class="pv-sub">${id==='files' ? 'Home › Projects › Boringdroid' : id==='mail' ? '3 unread in Inbox' : 'zsh'}</div>
+        </div>
+      ` : ''}
+    `;
+    railEl.appendChild(btn);
+  });
+
+  // ---------- Desktop icons ----------
+  const DESKTOP_ICONS = [
+    { name: 'This PC',       icon: 'computer',       color: 'ic-slate' },
+    { name: 'Home',          icon: 'folder_shared',  color: 'ic-amber' },
+    { name: 'Recycle Bin',   icon: 'delete',         color: 'ic-slate' },
+    { name: 'Projects',      icon: 'folder',         color: 'ic-amber' },
+    { name: 'Boringdroid.md',icon: 'description',    color: 'ic-blue' },
+    { name: 'Wallpapers',    icon: 'image',          color: 'ic-purple' },
+    { name: 'spec.pdf',      icon: 'picture_as_pdf', color: 'ic-red' },
+  ];
+  const diEl = document.getElementById('desktopIcons');
+  DESKTOP_ICONS.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'bd-di';
+    el.innerHTML = `
+      <div class="icon ${d.color}"><span class="material-symbols-rounded">${d.icon}</span></div>
+      <div class="label">${d.name}</div>
+    `;
+    diEl.appendChild(el);
+  });
+
+  // ---------- Start menu pinned ----------
+  const pinEl = document.getElementById('pinnedGrid');
+  PINNED_IDS.forEach(id => {
+    const a = APPS.find(x => x.id === id);
+    const t = document.createElement('div');
+    t.className = 'apd-tile';
+    t.innerHTML = `<div class="chip ${a.color}"><span class="material-symbols-rounded">${a.icon}</span></div><div class="nm">${a.name}</div>`;
+    if (id === 'settings') t.onclick = () => window.location.href = 'BoringdroidSettings.html';
+    pinEl.appendChild(t);
+  });
+
+  // ---------- Recents ----------
+  const RECENTS = [
+    { icon: 'description', color: 'ic-blue',   nm: 'SystemUI-spec.md',     sub: 'Edited 12 min ago · Documents' },
+    { icon: 'image',       color: 'ic-purple', nm: 'wallpaper_02.png',     sub: 'Opened 18 min ago · Pictures' },
+    { icon: 'folder',      color: 'ic-amber',  nm: 'boringdroid/system-ui',sub: 'Opened 32 min ago' },
+    { icon: 'picture_as_pdf', color: 'ic-red', nm: 'M3-expressive.pdf',    sub: 'Yesterday · Downloads' },
+  ];
+  const recEl = document.getElementById('recentsGrid');
+  RECENTS.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'rec-row';
+    row.innerHTML = `<div class="ic ${r.color}"><span class="material-symbols-rounded">${r.icon}</span></div><div class="meta"><div class="nm">${r.nm}</div><div class="sub">${r.sub}</div></div>`;
+    recEl.appendChild(row);
+  });
+
+  // ---------- Quick settings ----------
+  const QS = [
+    { icon: 'wifi',            nm: 'Wi-Fi',       sub: 'Boringnet-5G', on: true  },
+    { icon: 'bluetooth',       nm: 'Bluetooth',   sub: '2 devices',    on: true  },
+    { icon: 'airplanemode_active', nm: 'Airplane',sub: 'Off',          on: false },
+    { icon: 'dark_mode',       nm: 'Dark mode',   sub: 'On',           on: true  },
+    { icon: 'nightlight',      nm: 'Night light', sub: 'Auto',         on: false },
+    { icon: 'battery_saver',   nm: 'Battery saver', sub: '72%',        on: false },
+    { icon: 'do_not_disturb_on', nm: 'DnD', sub: 'Until 5PM', on: false },
+    { icon: 'cast',            nm: 'Cast',        sub: 'None',         on: false },
+    { icon: 'wifi_tethering', nm: 'Hotspot',   sub: 'Off',          on: false },
+  ];
+  const qsEl = document.getElementById('qsGrid');
+  QS.forEach(q => {
+    const t = document.createElement('div');
+    t.className = 'qs-tile' + (q.on ? ' on' : '');
+    t.innerHTML = `
+      <div class="top"><span class="material-symbols-rounded">${q.icon}</span>${q.on ? '<span class="material-symbols-rounded" style="font-size:16px; opacity:.7">chevron_right</span>' : ''}</div>
+      <div><div class="nm">${q.nm}</div><div class="sub">${q.sub}</div></div>
+    `;
+    t.onclick = () => t.classList.toggle('on');
+    qsEl.appendChild(t);
+  });
+
+  // ---------- Overview ----------
+  const OV = [
+    { app: 'files', name: 'Files — Projects/Boringdroid' },
+    { app: 'mail', name: 'Mail — Inbox' },
+    { app: 'terminal', name: 'Terminal — zsh' },
+    { app: 'chrome', name: 'Browser — boringdroid.dev' },
+    { app: 'photos', name: 'Photos — Recents' },
+  ];
+  const ovEl = document.getElementById('ovStrip');
+  OV.forEach(o => {
+    const a = APPS.find(x => x.id === o.app);
+    const card = document.createElement('div');
+    card.className = 'ov-card';
+    card.innerHTML = `
+      <div class="close"><span class="material-symbols-rounded">close</span></div>
+      <div class="ov-chrome">
+        <span class="dot ${a.color}"><span class="material-symbols-rounded">${a.icon}</span></span>
+        <span>${o.name}</span>
+      </div>
+      <div class="ov-body" style="background: linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-primary) 20%, var(--md-sys-color-surface-container-low)), var(--md-sys-color-surface-container-high));">
+        <div style="position:absolute; inset: 24px; border-radius: 10px; background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);"></div>
+        <div style="position:absolute; left: 36px; top: 36px; right: 36px; height: 10px; border-radius: 4px; background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);"></div>
+        <div style="position:absolute; left: 36px; top: 56px; width: 60%; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);"></div>
+      </div>
+    `;
+    card.querySelector('.close').onclick = e => { e.stopPropagation(); card.remove(); };
+    ovEl.appendChild(card);
+  });
+
+  // ---------- Clock ----------
+  function tick() {
+    const d = new Date();
+    const hh = d.getHours();
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const h12 = ((hh + 11) % 12) + 1;
+    const t = `${h12}:${mm}`;
+    document.getElementById('trayTime').textContent = t;
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('trayDate').textContent = `${days[d.getDay()]}, ${mons[d.getMonth()]} ${d.getDate()}`;
+    document.getElementById('bigTime').textContent = t;
+    const dayF = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const monF = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('bigDate').textContent = `${dayF[d.getDay()]}, ${monF[d.getMonth()]} ${d.getDate()}`;
+  }
+  tick(); setInterval(tick, 30000);
+
+  // Calendar grid
+  (function buildCal(){
+    const grid = document.getElementById('calGrid'); if (!grid) return;
+    const dows = ['S','M','T','W','T','F','S'];
+    dows.forEach(d => { const e = document.createElement('div'); e.className='dow'; e.textContent=d; grid.appendChild(e); });
+    // April 2026: Apr 1 is a Wednesday (dow=3). Pad with end of March.
+    const padStart = 3; // Wed
+    const daysInMar = 31;
+    for (let i = padStart; i > 0; i--) {
+      const e = document.createElement('div'); e.className='d mute'; e.textContent = (daysInMar - i + 1); grid.appendChild(e);
+    }
+    const daysInApr = 30;
+    for (let d = 1; d <= daysInApr; d++) {
+      const e = document.createElement('div'); e.className='d'; e.textContent = d;
+      if (d === 19) e.classList.add('today');
+      if ([7, 14, 22, 28].includes(d)) e.classList.add('ev');
+      grid.appendChild(e);
+    }
+    const rem = 7 - ((padStart + daysInApr) % 7);
+    if (rem < 7) for (let i = 1; i <= rem; i++) { const e = document.createElement('div'); e.className='d mute'; e.textContent = i; grid.appendChild(e); }
+    // sync big clock
+    const tEl = document.getElementById('calTime'), sEl = document.getElementById('calSub');
+    if (tEl) tEl.textContent = document.getElementById('trayTime').textContent;
+    if (sEl) sEl.textContent = 'Sunday, April 19, 2026';
+  })();
+
+  // ---------- Panel toggles ----------
+  function toggleStart() {
+    closePanel('notifPanel');
+    document.getElementById('startMenu').classList.toggle('open');
+  }
+  function toggleNotif() {
+    closePanel('startMenu');
+    closePanel('calPanel');
+    document.getElementById('notifPanel').classList.toggle('open');
+  }
+  function toggleCalendar() {
+    closePanel('startMenu');
+    closePanel('notifPanel');
+    document.getElementById('calPanel').classList.toggle('open');
+  }
+  function closePanel(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
+  function toggleOverview() {
+    document.getElementById('overview').classList.toggle('open');
+  }
+
+  function closeWindow(id) { const w = document.getElementById(id); if (w) w.style.display = 'none'; }
+  function showDesktop() {
+    ['winFiles','winMail','winTerm'].forEach(id => document.getElementById(id).style.display = 'none');
+  }
+
+  // click outside closes panels
+  document.addEventListener('mousedown', (e) => {
+    const s = document.getElementById('startMenu');
+    const n = document.getElementById('notifPanel');
+    const ov = document.getElementById('overview');
+    const tb = document.querySelector('.bd-taskbar');
+    const dock = document.querySelector('.bd-dock');
+    if (s.classList.contains('open') && !s.contains(e.target) && !tb.contains(e.target) && !dock.contains(e.target)) s.classList.remove('open');
+    if (n.classList.contains('open') && !n.contains(e.target) && !tb.contains(e.target) && !dock.contains(e.target)) n.classList.remove('open');
+    const c = document.getElementById('calPanel');
+    if (c && c.classList.contains('open') && !c.contains(e.target) && !tb.contains(e.target) && !dock.contains(e.target)) c.classList.remove('open');
+    const ctx = document.getElementById('ctxMenu');
+    if (ctx.classList.contains('open') && !ctx.contains(e.target)) ctx.classList.remove('open');
+    if (ov.classList.contains('open') && e.target.closest('.ov-card') === null && e.target.closest('.bd-dock') === null) {
+      // click on overview backdrop closes it
+      if (ov.contains(e.target) && !e.target.closest('.ov-card')) ov.classList.remove('open');
+    }
+  });
+
+  // right-click on desktop
+  document.getElementById('desktop').addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.bd-window') || e.target.closest('.bd-taskbar') || e.target.closest('.bd-panel')) return;
+    e.preventDefault();
+    const ctx = document.getElementById('ctxMenu');
+    ctx.classList.add('open');
+    ctx.style.left = Math.min(e.clientX, window.innerWidth - 240) + 'px';
+    ctx.style.top  = Math.min(e.clientY, window.innerHeight - 360) + 'px';
+  });
+
+  // Make windows draggable by chrome
+  document.querySelectorAll('.bd-window').forEach(win => {
+    const chrome = win.querySelector('.win-chrome');
+    let ox = 0, oy = 0, dragging = false;
+    chrome.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.win-ctrl')) return;
+      dragging = true;
+      const r = win.getBoundingClientRect();
+      ox = e.clientX - r.left; oy = e.clientY - r.top;
+      win.style.zIndex = 20;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      win.style.left = (e.clientX - ox) + 'px';
+      win.style.top  = (e.clientY - oy) + 'px';
+      win.style.bottom = 'auto';
+    });
+    document.addEventListener('mouseup', () => dragging = false);
+  });
+
+  // Focus raising
+  document.querySelectorAll('.bd-window').forEach(win => {
+    win.addEventListener('mousedown', () => {
+      document.querySelectorAll('.bd-window').forEach(w => w.style.zIndex = 10);
+      win.style.zIndex = 20;
+    });
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('overview').classList.remove('open');
+      document.getElementById('startMenu').classList.remove('open');
+      document.getElementById('notifPanel').classList.remove('open');
+      const cp = document.getElementById('calPanel'); if (cp) cp.classList.remove('open');
+      document.getElementById('ctxMenu').classList.remove('open');
+    }
+    if (e.key === 'Meta' || e.key === 'OS' || e.key === 'Super') { e.preventDefault(); toggleStart(); }
+    if (e.altKey && e.key === 'Tab') { e.preventDefault(); toggleOverview(); }
+  });
+</script>
+
+</body>
+</html>
