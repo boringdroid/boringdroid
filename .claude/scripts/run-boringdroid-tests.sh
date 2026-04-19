@@ -105,6 +105,11 @@ done
 # Clear logcat so a failure capture below only shows test-run lines.
 adb logcat -c > /dev/null 2>&1 || true
 
+# Drop root before instrumentation — `cmd notification post` fails with
+# NameNotFoundException when adb is uid=0 (no installed package for root).
+adb unroot > /dev/null 2>&1 || true
+adb wait-for-device > /dev/null 2>&1 || true
+
 # ──────────────────────────────────────────────
 # Run instrumentation
 # ──────────────────────────────────────────────
