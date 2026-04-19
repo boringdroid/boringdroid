@@ -23,3 +23,24 @@ Issues should be used to report problems, request a new feature, or to discuss p
 ### Pull Requests
 
 PRs to our projects are always welcome and can be a quick way to get your fix or improvement slated for the next release.
+
+## Testing
+
+### Instrumentation tests
+
+The `BoringdroidSystemUI` instrumentation suite (including `OverviewTest`) runs on the `boringdroid_x86_64-userdebug` emulator. Build with Soong and install as a normal test APK:
+
+```shell
+m BoringdroidSystemUITests
+adb install -r -t \
+    out/target/product/boringdroid_x86_64/testcases/BoringdroidSystemUITests/x86_64/BoringdroidSystemUITests.apk
+adb shell am instrument -w -e class \
+    com.boringdroid.systemui.overview.OverviewTest \
+    com.boringdroid.systemui.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+### CI / gating policy
+
+A single clean instrumentation run is the pass/fail signal. If a run fails, retry it **once** against a freshly-booted emulator before treating it as a regression.
+
+Back-to-back stress runs (e.g. five consecutive `OverviewTest` invocations after a `force-stop` of `com.android.settings` and `com.boringdroid.systemui`) are a **development tool** for hunting races, not a CI gate. Under sustained instrumentation load the emulator accumulates GC/IO pressure; per-suite runtimes can double or triple after several minutes, and multiple otherwise-independent test paths will flake in the same run. Chasing that tail with longer timeouts lengthens the suite linearly without eliminating the race. If you need repeated stress runs, recycle the emulator between them.
