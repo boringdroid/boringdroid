@@ -102,6 +102,15 @@ while ! adb shell dumpsys window windows 2>/dev/null | grep -qE "BoringdroidTask
     sleep 1; n=$((n+1))
 done
 
+# While SystemUI was restarting, the TYPE_NAVIGATION_BAR taskbar window was
+# briefly absent and Launcher3 re-laid its Hotseat against the full display
+# height (mInsets.bottom = 0). Launcher3 caches that DeviceProfile and does not
+# re-query insets when the taskbar window comes back, so the hotseat icons end
+# up drawn under the taskbar. Force-stop Launcher so it re-creates its window
+# with the current inset state.
+adb shell am force-stop com.android.launcher3 > /dev/null 2>&1 || true
+sleep 1
+
 # Clear logcat so a failure capture below only shows test-run lines.
 adb logcat -c > /dev/null 2>&1 || true
 
