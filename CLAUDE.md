@@ -11,7 +11,7 @@ Boringdroid is an AOSP-extending project that layers a minimal multi-window patc
 The AOSP root (the parent of this `boringdroid/` directory) is assembled by `repo sync` from `https://github.com/boringdroid/manifest.git`. Boringdroid-specific code lives in:
 
 - `vendor/boringdroid/` — vendor config, overlays, RRO, plus `boringdroid.mk` (adds `BoringdroidSettings` + `BoringdroidSystemUI` to `PRODUCT_PACKAGES` and sets `persist.sys.systemuiplugin.enabled=true`).
-- `vendor/boringdroid/apps/BoringdroidSystemUI/` — SystemUI plugin that renders the taskbar and injects views into the nav bar. Has its own Gradle setup for IDE development; consumes `sysui_shared.jar` from SystemUI for task events.
+- `vendor/boringdroid/apps/BoringdroidSystemUI/` — SystemUI plugin that renders the taskbar and injects views into the nav bar. Builds via Soong (`Android.bp`); consumes `sysui_shared.jar` from SystemUI for task events.
 - `vendor/boringdroid/apps/BoringdroidSettings/` — Settings app using `EXTRA_SETTINGS` to hook into the stock Settings dashboard (toggles PC mode, toggles `BoringdroidSystemUI`).
 - `vendor/boringdroid/apps/Launcher3/` — customized Launcher3 fork.
 - `device/generic/boringdroid_x86_64/` — emulator target derived from `sdk_phone_x86_64` (`AndroidProducts.mk`, `BoardConfig.mk`, `boringdroid_x86_64.mk`, `config.ini.pc`).
@@ -33,12 +33,11 @@ m
 
 The target is emulator-based (derived from `goldfish`). After `m`, launch with `emulator`. If you hit "boot image verified" errors, constrain the build parallelism (`m -j8` or lower) — this is a known workaround on the 13.0.0+ branches.
 
-For IDE-driven iteration on `BoringdroidSystemUI` (the most frequently-edited component), use its in-tree Gradle script — see that project's own docs. The app still needs the framework patches and `sysui_shared.jar` from a full AOSP build to run correctly.
+For IDE-driven iteration on `BoringdroidSystemUI` or `BoringdroidSettings`, import the modules via Android Studio's Soong integration. The plugin also needs the framework patches and `sysui_shared.jar` from a full AOSP build to run correctly.
 
 ## Code Style
 
-- Boringdroid apps use **Spotless**: run `./gradlew spotlessApply` inside each app's Gradle project before committing.
-- Non-app (framework / system) changes follow the [AOSP code style](https://source.android.com/setup/contribute#contribute-to-the-code).
+- Boringdroid apps follow the [AOSP code style](https://source.android.com/setup/contribute#contribute-to-the-code) — same rules as framework/system changes.
 
 ## Conventions for Claude
 
@@ -51,7 +50,7 @@ For IDE-driven iteration on `BoringdroidSystemUI` (the most frequently-edited co
   This applies to any file that exists in stock AOSP (notably `frameworks/base/`, `packages/apps/Launcher3/`, `system/*`, `art/`). Files wholly owned by boringdroid (`vendor/boringdroid/*`, `device/generic/boringdroid_x86_64/*`, `BoringdroidSystemUI`, `BoringdroidSettings`) don't need markers — they ship with boringdroid.
 - **Keep forward-porting in mind when editing forked AOSP files.** Boringdroid tracks AOSP 9.0 – 14.0; the same patch is replayed against new AOSP releases. Keep diffs in upstream files minimal and additive — prefer hooks, overlays, or new standalone files over intrusive in-place edits. A change that reads cleanly in a `git diff` against `aosp/main` is one that will rebase cleanly next year.
 - **Always import classes in Java/Kotlin code; do not use fully-qualified class paths inline.** Add an `import` at the top of the file and reference the class by its simple name in the body. The only exception is when the simple name would collide with another class already imported in the same file — in that case, use the fully-qualified name for the conflicting reference only.
-- **Build boringdroid apps with Soong (`Android.bp`), not Gradle.** `BoringdroidSystemUI`, `BoringdroidSettings`, `Launcher3`, and any new boringdroid-owned apps ship as AOSP modules — they must build with `m <module>` as part of the `boringdroid_x86_64-userdebug` image. Use AOSP-hosted libraries (e.g. `androidx.test.runner`, `androidx.test.uiautomator_uiautomator`, `truth-prebuilt`) rather than Maven coordinates. The in-tree `build.gradle.kts` / `./gradlew` setups exist for IDE iteration only and must not be the source of production artifacts, test APKs, or anything the dispatch loop depends on. New source sets (e.g. `androidTest/`) need a corresponding `android_test` stanza in `Android.bp`.
+- **Build boringdroid apps with Soong (`Android.bp`).** `BoringdroidSystemUI`, `BoringdroidSettings`, `Launcher3`, and any new boringdroid-owned apps ship as AOSP modules — they must build with `m <module>` as part of the `boringdroid_x86_64-userdebug` image. Use AOSP-hosted libraries (e.g. `androidx.test.runner`, `androidx.test.uiautomator_uiautomator`, `truth-prebuilt`) rather than Maven coordinates. Gradle is not used anywhere in the product pipeline — there are no `build.gradle.kts` / `./gradlew` files in these modules. New source sets (e.g. `androidTest/`) need a corresponding `android_test` stanza in `Android.bp`.
 - **Keep dispatch / plan / handoff state out of production code.** Project-internal milestone labels (`M1 Task 4`, `Task 4e-b`, `Priority 1`, `handoff #17`, `post-M1`, etc.) belong in `docs/superpowers/plans/*.md` and `boringdroid-handoff-*.md`, not in Kotlin/Java/XML sources, `AndroidManifest.xml`, `Android.bp`, or RRO `config.xml`. When a comment's only purpose is to tie code to the roadmap cycle that introduced it, delete the comment; if there's a genuine WHY (a permission rationale, a resource-id invariant, a threading note), keep the WHY and drop the milestone reference. Future dispatch subagents: write the rationale in the handoff, not the file.
 - Changes are split across many forked AOSP repos — before editing, confirm which repo owns the file (`git -C <path-to-repo> status`) so the commit lands in the right project.
 - Boringdroid prefers small, targeted patches that could plausibly upstream: keep diffs minimal and resist refactors outside the change at hand (see `ARCHITECTURE.md`'s framing of the patchset as intentionally "boring").
