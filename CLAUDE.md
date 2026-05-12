@@ -69,6 +69,38 @@ Rules distilled from the M5 redesign cycle. They apply to every plugin-owned ove
 - **When exposing a Compose element to UiAutomator, prefix test tags with `pkg:id/` and use `clearAndSetSemantics` if the element is also wrapped in `clickable`.** Compose's `testTagsAsResourceId = true` writes the tag into `AccessibilityNodeInfo.setViewIdResourceName`, so tags must read `"com.boringdroid.systemui:id/xxx"` to satisfy `By.res(PLUGIN_PKG, "xxx")`. When both `testTag` and `contentDescription` must land on the same a11y node (e.g. to make `By.res(...).descContains(...)` match), replace `.semantics { ... }` with `.clearAndSetSemantics { ... }` on the `clickable` Box — plain `.semantics` on a `Modifier.clickable` chain emits two separate `AccessibilityNodeInfo`s and the selector mismatches.
 - **When removing UI (a QS tile, a start-menu section, a settings entry), delete the full supply chain.** For a QS tile that means: the `QsTile(...)` invocation in `QsGrid`, the `collectAsState()` variable, the `MutableStateFlow` + public `StateFlow` + `set…()` in `QsTileStore`, the `LABEL_…` constant, the matching `toggle…()` in `QsController`, and any import of the (now unreferenced) Material icon. Half-removed code rots fast — unreferenced flows survive in IDE autocomplete and tempt re-reintroduction one milestone later.
 
+## Verification for BoringdroidSettings
+
+Any change to `vendor/boringdroid/apps/BoringdroidSettings/` (Kotlin source, layout / resource XML,
+`AndroidManifest.xml`, or `Android.bp`) must end with a green run of the instrumentation suite
+before the work is considered done:
+
+```shell
+source build/envsetup.sh
+lunch boringdroid_x86_64-userdebug
+m BoringdroidSettings BoringdroidSettingsTests
+bash .claude/scripts/run-boringdroid-settings-tests.sh
+```
+
+The script (mirror of `run-boringdroid-tests.sh` for the SystemUI plugin) builds both APKs,
+installs them on a booted `boringdroid_x86_64-userdebug` emulator, restarts SystemUI for cleanliness,
+runs every class in `com.boringdroid.settings.test`, and exits non-zero on any failure (capturing
+a screenshot + logcat in `/tmp/boringdroid-dispatch/`). The suite covers:
+
+- **AppBehaviorTest** — filter chips render, "Select all" reveals the bulk-action bar, bulk apply
+  dismisses the selection, a single-app row opens the mode sheet.
+- **AboutBoringdroidTest** — hero card action buttons (Website / GitHub / Report issue), Project /
+  Authors / System card rows.
+- **BoringdroidSettingsBaselineTest** — both activities launch and render their root testTag.
+
+When adding new UI to a `BoringdroidSettings` screen, give each interactive element a stable
+testTag via `Modifier.bdTag("foo")` (defined in `TestTags.kt`) and extend the corresponding test
+class so the surface stays automated. `bdTag` writes the tag as `com.boringdroid.settings:id/foo`
+because Compose's `testTagsAsResourceId` copies the tag string verbatim into the AccessibilityNode's
+`viewIdResourceName` — without the `pkg:id/` prefix UiAutomator's `By.res(packageName, resourceId)`
+won't match. Same rule as BoringdroidSystemUI, even though Settings runs in its own process; do not
+hand-roll bare-string `Modifier.semantics { testTag = "foo" }` blocks.
+
 ## Dispatch Automation
 
 `.claude/commands/dispatch.md` plus `.claude/scripts/boringdroid-dispatch.sh` and `.claude/scripts/dispatch-progress.py` implement an automated handoff-driven development loop for boringdroid, adapted from the Digitalis project's dispatch system. Invoke from within Claude Code with `/dispatch [task description]`, or from a shell:
