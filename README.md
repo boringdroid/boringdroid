@@ -13,14 +13,57 @@ later releases, which is the point.
 
 ## Preview
 
-![screenshot with multi-window](./images/screenshot-multi-window.png)
+### Home
 
-Freeform windows ship enabled by default, with bounds and windowing-mode
-persistence so apps come back where you left them. The plugin-driven taskbar
-shows running tasks and installed apps, an action center with notifications
-and quick-settings tiles, a calendar / clock panel, a start menu, and an
-Overview surface for Alt+Tab / recents. A separate Settings app exposes the
-PC-mode toggles via Android's stock Settings dashboard.
+![home screen](./images/home.png)
+
+Home screen on the `boringdroid_x86_64-userdebug` emulator: the purple
+default wallpaper, Launcher's hotseat sitting above the taskbar, and the
+boringdroid taskbar pinned at the bottom with a start pill, search pill,
+centered running-app rail, and the system tray.
+
+### Start menu
+
+![start menu](./images/start-menu.png)
+
+Compose-built start menu with a search pill, a pinned-app grid, and a user
+rail (lock, sign-out, power). Opens from the start button, the search pill,
+or the Meta key.
+
+### Action Center
+
+![action center](./images/action-center.png)
+
+Clock header, a 3×3 grid of named quick-settings tiles (Wi-Fi, Bluetooth,
+DND, Rotate, Airplane, Battery saver, Night light, Hotspot), a now-playing
+media card, the notification list, and a Clear all action. Opens on the
+taskbar bell.
+
+### Calendar & Clock
+
+![calendar](./images/calendar.png)
+
+42-day month grid with next/previous navigation, event dots pulled from
+`CalendarContract.Instances`, and today's agenda below. Opens on the taskbar
+clock; opening it closes the Action Center.
+
+### Recents
+
+![recents](./images/recents.png)
+
+Mission-Control-style expo. Each card is sized to its real window bounds
+under a common scale, so portrait popups read as portrait and landscape
+freeform windows read as landscape. Tapping a thumbnail or its caption
+brings the task back to the front. Triggered from the taskbar or Alt+Tab.
+
+### Freeform multi-window
+
+![multi-window](./images/multi-window.png)
+
+`config_freeformWindowManagement=true` ships by default. Apps open in
+resizable freeform windows with minimize / maximize / close in the title
+bar, and the framework persists each app's bounds and windowing mode across
+sessions.
 
 ## Download
 
