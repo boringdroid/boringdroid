@@ -4,13 +4,23 @@
 
 ## Introduction
 
-Boringdroid is an `AOSP` extending project based on `AOSP`(9.0 - 14.0), and it provides a minimum patchset to use multi-window in `AOSP` by default. The patch set is boring, and most of problems the patchset resolves look like they are disappearing on `master` branch, so the project is boring, that the reason I calls it Boringdroid.
+Boringdroid is an AOSP-extending project that layers a minimal multi-window
+patchset on top of stock Android. It tracks AOSP 9.0 through 14.0; this
+branch is `boringdroid-14.0.0`. The patches are intentionally small,
+conservative, and almost-upstream-quality. A lot of the rough edges the
+patchset originally papered over have been smoothed out by AOSP itself in
+later releases, which is the point.
 
 ## Preview
 
 ![screenshot with multi-window](./images/screenshot-multi-window.png)
 
-The boringdroid adds a minimize button for each window, and provides a smooth resizing experience. Boringdroid also provides an enhanced taskbar to show running task list and installed app list. The next steps for Boringdroid will be to provide system tray functionalities in the taskbar.
+Freeform windows ship enabled by default, with bounds and windowing-mode
+persistence so apps come back where you left them. The plugin-driven taskbar
+shows running tasks and installed apps, an action center with notifications
+and quick-settings tiles, a calendar / clock panel, a start menu, and an
+Overview surface for Alt+Tab / recents. A separate Settings app exposes the
+PC-mode toggles via Android's stock Settings dashboard.
 
 ## Download
 
@@ -20,6 +30,7 @@ cd boringdroid/14
 repo init -u https://github.com/boringdroid/manifest.git -b boringdroid-14.0.0
 repo sync -c -d --no-tags
 ```
+
 ## Build
 
 ```shell
@@ -28,30 +39,36 @@ lunch boringdroid_x86_64-userdebug
 m
 ```
 
-The boringdroid now runs in emulator, which is convenient to debug and test modification. So the product `boringdroid_x86_64` bases on the `goldfish`. After building, we can execute `emulator` to start emulator.
+The default product is `boringdroid_x86_64`, derived from `sdk_phone_x86_64`,
+so the resulting image runs in the AOSP emulator. After `m` finishes, launch
+it with `emulator`.
 
-From boringdroid-13.0.0, if you encounter boot image verified error, you can try use `m -j8` or other proper thread number to reduce the thread number for building to fix it.
+From `boringdroid-13.0.0` onward, if the build fails with a "boot image
+verified" error, retry with a smaller `-j` value (e.g. `m -j8`). The
+underlying race is upstream; the lower parallelism is a workaround.
 
 ## Contributing
 
-See [CONTRIBUTING](CONTRIBUTING.md)
+See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Architecture
 
-See [ARCHITECTURE](ARCHITECTURE.md)
+See [ARCHITECTURE](ARCHITECTURE.md).
 
 ## Android-x86 porting
 
-The [Android-x86](https://www.android-x86.org/) has accepted ported patches for [Android-x86](https://www.android-x86.org/) to their code repositories.
+The [Android-x86](https://www.android-x86.org/) project has accepted ported
+patches from boringdroid into its repositories.
 
-## A BlissLabs Project
+## A BlissLabs project
 
-The boringdroid is a [BlissLabs](https://blisslabs.org/) Project.
+Boringdroid is a [BlissLabs](https://blisslabs.org/) project.
 
 ## Special thanks
 
-Thanks Roger Truttmann of [BlissLabs](https://blissos.org/) to help design logo.
+Thanks to Roger Truttmann of [BlissLabs](https://blissos.org/) for the logo.
 
 ## License
 
-The modified `AOSP` project uses the origin license. And the `boringdroid` created projects will uses its custom license on its project.
+Modifications to AOSP files inherit the upstream Apache 2.0 license.
+Boringdroid-owned projects ship under their own LICENSE file.
