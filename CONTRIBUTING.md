@@ -117,6 +117,44 @@ adb shell am instrument -w -r \
 is the only headless route. With an emulator window visible, the host
 cursor at the screen's top edge works as expected.
 
+### Taskbar context menu
+
+The context menu over running-app icons is opened by **long-press**
+on the icon. Coverage lives in `TaskbarContextMenuTest`, which uses
+`UiObject2.longClick()` from UiAutomator.
+
+We previously also bridged a real-mouse right-click via
+`pointerInteropFilter` matching `MotionEvent.ACTION_DOWN` / `ACTION_BUTTON_PRESS`
+with `BUTTON_SECONDARY`. That code was removed because the Android
+Emulator never delivers `BUTTON_SECONDARY` to the guest — the
+emulator binary only exposes a virtual keyboard and a stack of
+touchscreen devices, host right-click is intercepted by the emulator
+UI, and we verified there is no path to add a mouse device:
+
+```shell
+adb shell getevent -p | grep "name:"
+#   "qwerty2"
+#   "virtio_input_multi_touch_1..11"
+#   "AT Translated Set 2 keyboard"
+#   "Power Button"
+```
+
+Attempted fixes that did not work:
+
+- `hw.mouse=yes` in `device/generic/boringdroid_x86_64/config.ini.pc`
+  — `strings` on the emulator binary shows it doesn't recognise
+  `hw.mouse` as a config key.
+- `-qemu -device usb-mouse` — emulator aborts: "No 'usb-bus' bus
+  found for device 'usb-mouse'".
+- `-qemu -usb -device usb-mouse` — emulator boots but the Goldfish
+  kernel does not ship USB HID drivers, so the guest never
+  enumerates the mouse.
+
+Long-press covers touch + synthetic-touch testing and is the single
+trigger we support today. If boringdroid eventually ships on real
+x86 hardware where a USB mouse IS enumerated, real-mouse right-click
+can be reintroduced behind a build flag.
+
 ### CI / gating policy
 
 A single clean instrumentation run is the pass/fail signal. If a run fails, retry it **once** against a freshly-booted emulator before treating it as a regression.

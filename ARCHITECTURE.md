@@ -222,3 +222,19 @@ transition through the shell-transition wrapper (`onTaskStackChanged`
 only fires for that path, not for direct organizer mode flips), then
 asserts on `dumpsys window windows` that the peek edge / panel windows
 attach and detach correctly.
+
+## Taskbar context menu
+
+Right-clicking (or long-pressing) a running-app icon in the taskbar
+opens a 3-item dropdown — Maximize / Restore, Minimize, Close — that
+shares the same `wm/TaskActions.kt` helper the peek caption uses, so
+the two surfaces produce identical results. The middle item is
+state-aware: it reads "Maximize" while the task is freeform and
+"Restore" while it is fullscreen, derived from
+`BdTaskInfo.mode` populated in `TaskbarState.refreshRunningTasks`.
+
+`TaskActions.toggleMaximize` reads
+`persist.wm.debug.desktop_mode[_2]` and mirrors the WMShell decor that
+prop selects: legacy decor flips windowing mode, modern desktop-mode
+decor toggles bounds between the display's stable bounds and the
+centred default desktop bounds.

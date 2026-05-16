@@ -79,6 +79,15 @@ WMShell is running the legacy caption — modern desktop-mode caption
 (`persist.wm.debug.desktop_mode` / `_2`) keeps its own in-window caption
 visible after maximize, so peek skips arming to avoid duplication.
 
+### Taskbar context menu
+
+Right-click any running-app icon in the taskbar and you get a small
+popup with **Maximize/Restore**, **Minimize**, and **Close** — the
+same three actions a window caption offers, anchored at the icon
+rather than the window. Useful for windows pushed off-screen, hidden
+behind others, or simply when your cursor is closer to the taskbar
+than the title bar.
+
 ## Download
 
 ```shell
