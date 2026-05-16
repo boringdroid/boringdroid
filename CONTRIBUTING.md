@@ -39,6 +39,84 @@ adb shell am instrument -w -e class \
     com.boringdroid.systemui.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
+### Peek caption gating
+
+The peek caption (drop-down title bar over a maximized window, see
+[ARCHITECTURE.md](ARCHITECTURE.md#peek-caption)) is gated by two sysprops
+read at `PeekCaptionController.start`. The instrumentation suite covers
+the legacy-decor happy path; the two early-return branches need a
+plugin restart so they have to be exercised manually.
+
+```shell
+adb root && adb wait-for-device
+adb shell whoami                        # must print "root"
+```
+
+Switch between scenarios by setting the props and restarting SystemUI
+so the plugin re-reads them:
+
+```shell
+# Happy path: kill switch on, desktop mode off
+adb shell setprop persist.boringdroid.peek_caption true
+adb shell setprop persist.wm.debug.desktop_mode_2 false
+adb shell setprop persist.wm.debug.desktop_mode  false
+
+# Kill switch off
+adb shell setprop persist.boringdroid.peek_caption false
+
+# Decor gate: modern desktop-mode caption active
+adb shell setprop persist.wm.debug.desktop_mode_2 true
+
+# Apply
+adb shell killall com.android.systemui
+sleep 5
+```
+
+Use `false` rather than `""` — `setprop key ""` is shell-fragile and on
+some Android builds leaves the previous value live. `SystemProperties.
+getBoolean` treats `false`/`0`/`off` as false regardless, so the
+explicit value is unambiguous and matches what the prop ends up as on
+a fresh boot.
+
+Then inspect which branch the controller took:
+
+```shell
+adb logcat -d -s PeekCaptionController
+```
+
+Expected output per scenario:
+
+| Scenario                                    | Log line                                                                                       |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Happy path                                  | *(no early-return line; peek arms — verify with `dumpsys window windows | grep BoringdroidPeek`)* |
+| `persist.boringdroid.peek_caption=false`    | `persist.boringdroid.peek_caption=false; not arming peek caption`                              |
+| `persist.wm.debug.desktop_mode[_2]=true`    | `DesktopMode active; not arming peek caption (in-window caption stays visible)`                |
+
+If `killall com.android.systemui` returns `Operation not permitted`,
+`adb root` did not promote — re-check `adb shell whoami` before assuming
+the gate is broken. The plugin only re-reads the props on `start()`, so
+without a SystemUI restart the change is invisible.
+
+To trigger the peek panel itself headlessly (no host mouse hover
+available), the existing `PeekCaptionTest` methods inject hover events
+via `UiAutomation.injectInputEvent`:
+
+```shell
+adb shell am instrument -w -r \
+    -e class 'com.boringdroid.systemui.PeekCaptionTest#peekPanel_appearsOnHoverAtTopEdge' \
+    com.boringdroid.systemui.test/androidx.test.runner.AndroidJUnitRunner
+
+# Holds the panel visible for 25s so you can screencap or inspect dumpsys
+adb shell am instrument -w -r \
+    -e class 'com.boringdroid.systemui.PeekCaptionTest#holdPeekForScreenshot' \
+    com.boringdroid.systemui.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+`adb shell input` cannot inject `ACTION_HOVER_ENTER` / `ACTION_HOVER_MOVE`
+(it only knows `DOWN`/`UP`/`MOVE`/`CANCEL`), so the instrumentation path
+is the only headless route. With an emulator window visible, the host
+cursor at the screen's top edge works as expected.
+
 ### CI / gating policy
 
 A single clean instrumentation run is the pass/fail signal. If a run fails, retry it **once** against a freshly-booted emulator before treating it as a regression.

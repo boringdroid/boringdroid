@@ -65,6 +65,20 @@ resizable freeform windows with minimize / maximize / close in the title
 bar, and the framework persists each app's bounds and windowing mode across
 sessions.
 
+### Peek caption
+
+![peek caption](./images/peek-caption.png)
+
+When a freeform window is maximized to fullscreen, the title bar is gone
+but the minimize / restore / close controls are still one cursor move
+away: park the pointer at the top edge of the screen and a slim caption
+slides down. Move away and it tucks back. Closes
+[issue #1](https://github.com/boringdroid/boringdroid/issues/1). Gated by
+`persist.boringdroid.peek_caption` (default on), and only arms when
+WMShell is running the legacy caption — modern desktop-mode caption
+(`persist.wm.debug.desktop_mode` / `_2`) keeps its own in-window caption
+visible after maximize, so peek skips arming to avoid duplication.
+
 ## Download
 
 ```shell

@@ -168,3 +168,57 @@ WMShell is the writer. The dimen lives in framework-res
 Both paths end up at `SurfaceControl.setCornerRadius`, so the cut-off
 corner composites as transparent regardless of which caption stack is
 active.
+
+## Peek caption
+
+[Issue #1](https://github.com/boringdroid/boringdroid/issues/1) asks for
+a drop-down title bar on a maximized window — when a freeform window
+goes fullscreen, the in-window caption disappears and there is no
+keyboard-free way to restore / minimize / close the window. Peek
+caption fills that gap with a 1px hover edge at the top of the display
+that, when the cursor crosses it, slides a 40dp caption panel down with
+those three buttons.
+
+The implementation lives entirely in BoringdroidSystemUI — no framework
+or WMShell patch — under
+`vendor/boringdroid/apps/BoringdroidSystemUI/app/src/main/java/com/boringdroid/systemui/peek/`:
+
+- `PeekCaptionController` owns the lifecycle. It checks two sysprops at
+  start: `persist.boringdroid.peek_caption` (default on; the feature
+  kill switch) and `persist.wm.debug.desktop_mode` /
+  `persist.wm.debug.desktop_mode_2` (the same pair
+  `DesktopModeStatus.isAnyEnabled` reads). If either desktop-mode prop
+  is true, peek does not arm — WMShell's `DesktopModeWindowDecoration`
+  keeps the in-window caption visible after maximize, so a peek caption
+  would just duplicate it.
+- `TaskFullscreenMonitor` registers a `TaskStackChangeListener` via
+  `TaskStackChangeListeners.getInstance()` and remembers each task's
+  previous windowing mode. When a task transitions
+  `WINDOWING_MODE_FREEFORM → WINDOWING_MODE_FULLSCREEN` (the legacy
+  `CaptionWindowDecoration → TaskOperations.maximizeTask` path) it
+  becomes the active peek target. Tasks that launched directly
+  fullscreen are left alone, so the peek does not appear on, e.g., a
+  fullscreen game.
+- `HoverEdgeWindow` is a 1px-tall `TYPE_NAVIGATION_BAR_PANEL` overlay
+  that catches `ACTION_HOVER_ENTER`/`MOVE` and notifies the controller.
+  No insets are advertised, so it does not steal screen real estate.
+- `PeekPanelWindow` is the slide-down Compose panel itself. The
+  controller drives restore via
+  `WindowContainerTransaction.setWindowingMode(token, FREEFORM)`,
+  minimize via `WCT.reorder(token, /*onTop=*/ false)` plus a home-launch
+  fallback, and close via `WCT.removeTask(token)`. `WindowOrganizer`
+  applies these transactions directly from the plugin process; no
+  shell-transition player is needed since the bounds-only mode flip
+  resolves to a regular task configuration change.
+
+The instrumentation suite under
+`app/src/androidTest/.../PeekCaptionTest.kt` exercises the legacy path
+end-to-end: it pins BoringdroidSettings into freeform via
+`ActivityOptions.setLaunchWindowingMode` + an organizer
+`setBounds` belt-and-braces (because `am start --windowingMode 5` is
+flaky once any prior task has spent time in fullscreen), taps the
+WMShell caption maximize button to drive the freeform → fullscreen
+transition through the shell-transition wrapper (`onTaskStackChanged`
+only fires for that path, not for direct organizer mode flips), then
+asserts on `dumpsys window windows` that the peek edge / panel windows
+attach and detach correctly.
