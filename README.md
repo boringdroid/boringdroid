@@ -113,6 +113,31 @@ From `boringdroid-13.0.0` onward, if the build fails with a "boot image
 verified" error, retry with a smaller `-j` value (e.g. `m -j8`). The
 underlying race is upstream; the lower parallelism is a workaround.
 
+## Samples
+
+The [`samples/HelloBoringdroid`](https://github.com/boringdroid/sample_HelloBoringdroid)
+module is an all-in-one Compose demo that exercises every distinctive
+boringdroid surface in a single APK: freeform window with a draggable
+caption, peek caption when maximized, taskbar context menu on long-press,
+a `<monochrome>` adaptive-icon layer for Material You themed icons, and
+a Material 3 body that pulls `dynamicLight/DarkColorScheme(context)`
+from the wallpaper on Android 12+. It doubles as a smoke-test target —
+launch it, drive each surface manually, watch logcat.
+
+Build and install with:
+
+```shell
+source build/envsetup.sh
+lunch boringdroid_x86_64-userdebug
+m HelloBoringdroid
+adb install -r out/target/product/boringdroid_x86_64/system/app/HelloBoringdroid/HelloBoringdroid.apk
+```
+
+The sample is a Soong module (`sdk_version: "current"`) — no Gradle, no
+`platform_apis`, so it stays consumable by anyone forking boringdroid.
+Source code, layout details, and a per-surface verification recipe live
+in [`samples/HelloBoringdroid/README.md`](samples/HelloBoringdroid/README.md).
+
 ## Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md).

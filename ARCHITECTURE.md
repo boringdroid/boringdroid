@@ -238,3 +238,42 @@ state-aware: it reads "Maximize" while the task is freeform and
 prop selects: legacy decor flips windowing mode, modern desktop-mode
 decor toggles bounds between the display's stable bounds and the
 centred default desktop bounds.
+
+## Samples
+
+`samples/HelloBoringdroid/` is an all-in-one demo / smoke-test target.
+It builds as `HelloBoringdroid` via Soong (`sdk_version: "current"` —
+no `platform_apis`, no Gradle, no privileged signature) and exercises
+every distinctive boringdroid surface from a single APK:
+
+- A Compose activity that opens in a freeform window by default and
+  picks up the WMShell caption.
+- A `<monochrome>` adaptive-icon layer in
+  `res/mipmap-anydpi-v26/ic_launcher.xml`, so when the user toggles
+  **Themed icons** in Wallpaper & style the BoringdroidSystemUI
+  `ThemedIconLoader` recolors it across the AllApps grid, the taskbar
+  rail, the Overview chips, and the peek caption — the cleanest test
+  target for that feature on a stock AOSP image (most AOSP-stock apps
+  don't ship a monochrome layer).
+- A *Material You* card that draws six color swatches resolved from
+  `dynamicLight/DarkColorScheme(context)`, so a wallpaper change retints
+  the activity body without a rebuild.
+- A *Window state* card showing `Activity.isInMultiWindowMode`, app
+  bounds, density, orientation, SDK level — the kind of values a
+  reviewer reaches for when verifying freeform behavior.
+- A *Boringdroid system properties* card that prints
+  `persist.sys.systemuiplugin.enabled`,
+  `persist.boringdroid.peek_caption`, and
+  `persist.wm.debug.desktop_mode[_2]` via reflection-based
+  `android.os.SystemProperties.get(...)`, so a fork can confirm the
+  expected props are set without rooting the device.
+
+The sample is **not** in `PRODUCT_PACKAGES` by default — it's a
+developer aid, not a user-facing app. Build it with
+`m HelloBoringdroid` and install via `adb install -r`; a fork that
+wants it preinstalled can append `HelloBoringdroid` to
+`PRODUCT_PACKAGES` in `boringdroid.mk` (or a wrapper product file).
+The module's standalone repo at
+[`sample_HelloBoringdroid`](https://github.com/boringdroid/sample_HelloBoringdroid)
+is tracked through the boringdroid manifest at
+`samples/HelloBoringdroid`.

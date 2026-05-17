@@ -39,6 +39,25 @@ adb shell am instrument -w -e class \
     com.boringdroid.systemui.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
+### Manual smoke target — HelloBoringdroid
+
+`samples/HelloBoringdroid` is the recommended target for manual
+end-to-end checks: a single APK that drives freeform + caption,
+peek caption (under `Meta`+`Up` and a top-edge hover), the
+taskbar context menu (long-press its icon), Material You themed
+icons (its `<monochrome>` layer is exercised by BoringdroidSystemUI's
+`ThemedIconLoader`), and Material 3 dynamic color (the activity body
+retints when wallpaper changes).
+
+```shell
+m HelloBoringdroid
+adb install -r out/target/product/boringdroid_x86_64/system/app/HelloBoringdroid/HelloBoringdroid.apk
+adb shell am start -n com.boringdroid.hello/.MainActivity
+```
+
+A per-surface verification recipe lives in
+[`samples/HelloBoringdroid/README.md`](../samples/HelloBoringdroid/README.md).
+
 ### Peek caption gating
 
 The peek caption (drop-down title bar over a maximized window, see
